@@ -1,12 +1,177 @@
-<!-- templates/admin/login.html -->
-<form method="POST">
-  {{ form.hidden_tag() }} <!-- includes CSRF token -->
-  {{ form.username.label }} {{ form.username() }}
-  {{ form.password.label }} {{ form.password() }}
-  {{ form.submit() }}
-</form>
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    {% for msg in messages %}<p style="color:red">{{ msg }}</p>{% endfor %}
-  {% endif %}
-{% endwith %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Tourism Booking</title>
+  <style>
+    :root {
+      --green: #a9d000;
+      --yellow: #f6ba00;
+      --white: #ffffff;
+      --dark: #282828;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--dark);
+      color: var(--white);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .login-container {
+      background-color: rgba(40, 40, 40, 0.8);
+      border-radius: 12px;
+      padding: 3rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 10px 30px rgba(169, 208, 0, 0.1);
+      border: 1px solid rgba(169, 208, 0, 0.2);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      color: var(--white);
+    }
+
+    .login-header h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, var(--green), var(--yellow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-header p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.95rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.6rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--white);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 2px rgba(169, 208, 0, 0.25);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 1.1rem;
+      background: linear-gradient(to right, var(--green), var(--yellow));
+      color: var(--dark);
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+      letter-spacing: 0.5px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(169, 208, 0, 0.3);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .flash-messages {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: rgba(246, 186, 0, 0.1);
+      border-left: 4px solid var(--yellow);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      color: var(--yellow);
+    }
+
+    .flash-messages p {
+      margin-bottom: 0.5rem;
+    }
+
+    .flash-messages p:last-child {
+      margin-bottom: 0;
+    }
+
+    .footer {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <h1>Welcome Back</h1>
+      <p>Sign in to access admin panel</p>
+    </div>
+
+    <form method="POST">
+      {{ form.hidden_tag() }}
+
+      <div class="form-group">
+        {{ form.username.label }}
+        {{ form.username() }}
+      </div>
+
+      <div class="form-group">
+        {{ form.password.label }}
+        {{ form.password() }}
+      </div>
+
+      <button type="submit" class="submit-btn">{{ form.submit.label.text }}</button>
+    </form>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for msg in messages %}
+            <p>{{ msg }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+  </div>
+</body>
+</html>

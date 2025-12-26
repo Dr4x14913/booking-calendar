@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory, render_template, flash, redirect, url_for
+from flask import Flask, send_from_directory, render_template, flash, redirect, url_for, request
 import json
 import os
 from pathlib import Path
@@ -27,10 +27,19 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Log In')
 
+@app.route('/update-dates', methods=['POST'])
+@login_required
+def update_dates():
+    new_dates = request.form.get("booked_dates").replace(" ","").split(",")
+    set_booked_dates(new_dates)
+    return redirect("/admin_dashboard")
+
 @app.route('/admin_dashboard')
 @login_required
 def admin():
-    return "Hello"
+    booked_dates = get_booked_dates()
+    print(booked_dates, flush=True)
+    return render_template('admin_panel.html', bookedDatesJson=booked_dates)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -41,7 +50,7 @@ def load_user(user_id):
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
     if current_user.is_authenticated:
-        return redirect(url_for('admin_dashboard'))
+        return redirect('/admin_dashboard')
     
     form = LoginForm()
     if form.validate_on_submit():
@@ -64,6 +73,11 @@ def admin_logout():
 def serve_index():
     booked_dates = get_booked_dates()
     return render_template('index.html', bookedDatesJson=booked_dates)
+
+def set_booked_dates(dates):
+    json_file = "/app/booked_dates.json"
+    with open(json_file, "w") as f:
+        json.dump(dates, f) 
 
 def get_booked_dates():
     json_file = "/app/booked_dates.json"
