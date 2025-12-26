@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calendar</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+	<div class="calendar-container"></div>
+	<script>
+		// JavaScript for calendar navigation without page reload
+		document.addEventListener("DOMContentLoaded", function() {
+		// Store booked dates in JavaScript
+		//var bookedDates = ' . $bookedDatesJson . ';
+		var bookedDates = {{ bookedDatesJson|safe }};
+		console.log(bookedDates);
+
+		// Current date
+		var currentDate = new Date();
+		var currentYear = currentDate.getFullYear();
+		var currentMonth = currentDate.getMonth(); // 0-based month
+
+		// Calendar display function
+		function displayCalendar(year, month) {
+		    // Get calendar container
+		    var calendarContainer = document.querySelector(".calendar-container");
+		    var monthNames = ["janvier", "février", "mars", "avril", "mai", "juin",
+				      "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+
+		    // Create the first day of the month
+		    var firstDayOfMonth = new Date(year, month, 1);
+		    var daysInMonth = new Date(year, month + 1, 0).getDate();
+		    var firstDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday, etc.
+
+		    // Adjust for Sunday being 0 in JavaScript but 7 in PHP
+		    if (firstDayOfWeek === 0) {
+			firstDayOfWeek = 7;
+		    }
+
+		    // Generate calendar HTML
+		    var html = '<div class="calendar-header">' +
+			'<h3>Calendrier des disponibilité</h3>' +
+			'<div class="calendar-navigation">' +
+			'<div class="nav-button nav-button-ajax prev-month">&laquo; Prev</div>' +
+			'<div class="calendar-dropdowns">' +
+			'<select class="calendar-dropdown month-dropdown">' + 
+			monthNames.map((monthName, index) => '<option value="' + index + '" ' + (index === month ? 'selected' : '') + '>' + monthName + '</option>').join('') +
+			'</select>' +
+			'<select class="calendar-dropdown year-dropdown">' + 
+			Array.from({length: 5}, (_, i) => currentYear - 2 + i).map(yearOption => '<option value="' + yearOption + '" ' + (yearOption === year ? 'selected' : '') + '>' + yearOption + '</option>').join('') +
+			'</select>' +
+			'</div>' +
+			'<div class="nav-button nav-button-ajax next-month">Next &raquo;</div>' +
+			'</div>' +
+			'</div>' +
+			'<div class="calendar-grid">';
+
+		    // Days of week header
+		    var days = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+		    for (var i = 0; i < days.length; i++) {
+			html += '<div class="calendar-day-header">' + days[i] + '</div>';
+		    }
+
+		    // Empty cells for days before the first day of the month
+		    for (var i = 1; i < firstDayOfWeek; i++) {
+			html += '<div class="calendar-empty"></div>';
+		    }
+
+		    // Calendar days
+		    for (var day = 1; day <= daysInMonth; day++) {
+			var date = year + "-" + (month + 1 < 10 ? "0" : "") + (month + 1) + "-" + (day < 10 ? "0" : "") + day;
+			var isBooked = bookedDates.includes(date);
+
+			if (isBooked) {
+			    html += '<div class="calendar-day booked" date="'+date+'">' + day + '</div>';
+			} else {
+			    html += '<div class="calendar-day available" date="'+date+'">' + day + '</div>';
+			}
+		    }
+
+		    html += '</div>';
+
+		    // Set the HTML to the container
+		    calendarContainer.innerHTML = html;
+
+		    // Reattach event listeners
+		    attachEventListeners();
+		}
+
+		// Attach event listeners to navigation buttons and dropdowns
+		function attachEventListeners() {
+		    // Remove existing event listeners to prevent duplicates
+		    var prevButtons = document.querySelectorAll(".prev-month");
+		    var nextButtons = document.querySelectorAll(".next-month");
+		    var monthDropdowns = document.querySelectorAll(".month-dropdown");
+		    var yearDropdowns = document.querySelectorAll(".year-dropdown");
+		    
+		    // Remove previous listeners
+		    prevButtons.forEach(function(button) {
+			button.removeEventListener("click", navigateCalendar);
+		    });
+		    nextButtons.forEach(function(button) {
+			button.removeEventListener("click", navigateCalendar);
+		    });
+		    
+		    monthDropdowns.forEach(function(dropdown) {
+			dropdown.removeEventListener("change", handleMonthChange);
+		    });
+		    
+		    yearDropdowns.forEach(function(dropdown) {
+			dropdown.removeEventListener("change", handleYearChange);
+		    });
+
+		    // Add new event listeners
+		    prevButtons.forEach(function(button) {
+			button.addEventListener("click", navigateCalendar);
+		    });
+		    nextButtons.forEach(function(button) {
+			button.addEventListener("click", navigateCalendar);
+		    });
+		    
+		    monthDropdowns.forEach(function(dropdown) {
+			dropdown.addEventListener("change", handleMonthChange);
+		    });
+		    
+		    yearDropdowns.forEach(function(dropdown) {
+			dropdown.addEventListener("change", handleYearChange);
+		    });
+		}
+
+		// Navigation function
+		function navigateCalendar(e) {
+		    e.preventDefault();
+		    if (e.target.classList.contains("prev-month")) {
+			currentMonth--;
+			if (currentMonth < 0) {
+			    currentMonth = 11;
+			    currentYear--;
+			}
+		    } else if (e.target.classList.contains("next-month")) {
+			currentMonth++;
+			if (currentMonth > 11) {
+			    currentMonth = 0;
+			    currentYear++;
+			}
+		    }
+		    displayCalendar(currentYear, currentMonth);
+		}
+
+		// Month change handler
+		function handleMonthChange(e) {
+		    currentMonth = parseInt(e.target.value);
+		    displayCalendar(currentYear, currentMonth);
+		}
+
+		// Year change handler
+		function handleYearChange(e) {
+		    currentYear = parseInt(e.target.value);
+		    displayCalendar(currentYear, currentMonth);
+		}
+
+		// Initialize calendar display
+		displayCalendar(currentYear, currentMonth);
+		});
+	</script>
+</body>
+</html>
