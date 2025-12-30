@@ -227,19 +227,24 @@
     }
 
     .calendar-controls button {
+        padding: 10px 20px;
+        background: #37474F;
+        color: #fff;
         border: none;
         border-radius: 6px;
         cursor: pointer;
+        font-weight: 500;
         transition: all 0.3s ease;
         display: flex;
         align-items: center;
         gap: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .calendar-controls button:hover {
         background: #636363;
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
 
     .calendar-input-group {

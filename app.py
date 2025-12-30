@@ -12,12 +12,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'fallback-super-secret'
 
 HASHED_PASSWORD = 'scrypt:32768:8:1$xxnzWKJVYVZb9gAx$7ac30bebe582b4c63879304eb80dcbfb91f00a25996b454558045ce4b29254ce9265379a00eff1ba4b8d63134f3029c520c05c64882bc5dece0507810050e61d' # hash for 'toto'
-
-# Setup Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'admin_login'
-
+#---------------------------------------------------------------------------------
+#-- CLASSES FOR FLASK LOGIN
+#---------------------------------------------------------------------------------
 class AdminUser(UserMixin):
     def __init__(self, user_id):
         self.id = user_id  # Flask-Login requires 'id' attribute
@@ -27,6 +24,18 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Log In')
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'admin_login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id == "admin":  # only one valid user
+        return AdminUser(user_id)
+    return None
+#---------------------------------------------------------------------------------
+#-- Admin routes
+#---------------------------------------------------------------------------------
 @app.route('/update-dates', methods=['POST'])
 @login_required
 def update_dates():
@@ -41,20 +50,14 @@ def admin():
     print(booked_dates, flush=True)
     return render_template('admin_panel.html', bookedDatesJson=booked_dates)
 
-@login_manager.user_loader
-def load_user(user_id):
-    if user_id == "admin":  # only one valid user
-        return AdminUser(user_id)
-    return None
-
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
     if current_user.is_authenticated:
         return redirect('/admin_dashboard')
-    
+
     form = LoginForm()
     if form.validate_on_submit():
-        if (form.username.data == "admin" and 
+        if (form.username.data == "admin" and
             check_password_hash(HASHED_PASSWORD, form.password.data)):
             user = AdminUser("admin")
             login_user(user)
@@ -69,25 +72,32 @@ def admin_logout():
     logout_user()
     return redirect(url_for('admin_login'))
 
+#---------------------------------------------------------------------------------
+#-- Routes
+#---------------------------------------------------------------------------------
 @app.route('/')
 def serve_index():
     booked_dates = get_booked_dates()
     return render_template('index.html', bookedDatesJson=booked_dates)
-
+#---------------------------------------------------------------------------------
+#-- FUNCTIONS
+#---------------------------------------------------------------------------------
 def set_booked_dates(dates):
     json_file = "/app/booked_dates.json"
     with open(json_file, "w") as f:
-        json.dump(dates, f) 
+        json.dump(dates, f)
 
 def get_booked_dates():
     json_file = "/app/booked_dates.json"
     if not Path(json_file).exists():
         with open(json_file, "w") as f:
-            json.dump([], f) 
+            json.dump([], f)
 
     with open(json_file, "r") as f:
-        return json.load(f) 
-
+        return json.load(f)
+#---------------------------------------------------------------------------------
+#-- MAIN
+#---------------------------------------------------------------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
 
