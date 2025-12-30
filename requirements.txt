@@ -2,3 +2,4 @@ flask
 pathlib
 Flask-Login
 Flask-WTF
+gunicorn
