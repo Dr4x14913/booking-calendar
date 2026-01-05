@@ -116,6 +116,38 @@
         background-color: #ff6b6b;
         color: white;
         border-color: #ff5252;
+        cursor: not-allowed;
+        opacity: 0.8;
+        position: relative;
+    }
+
+    .calendar-day.booked:hover {
+        opacity: 0.8;
+        transform: none;
+        box-shadow: none;
+        background-color: #ff6b6b;
+    }
+
+    .calendar-day.booked::after {
+        content: "Indisponible";
+        position: absolute;
+        top: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 107, 107, 0.9);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.7em;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    .calendar-day.booked:hover::after {
+        opacity: 1;
     }
 
     .calendar-day.available {

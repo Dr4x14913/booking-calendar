@@ -122,10 +122,36 @@ document.addEventListener("DOMContentLoaded", function() {
     function fetchPriceForRange() {
         if (!startDate || !endDate) return;
 
+        // Check if the selected range includes any booked dates
+        var start = new Date(startDate);
+        var end = new Date(endDate);
+        var hasBookedDates = false;
+        
+        var current = new Date(start);
+        while (current <= end) {
+            var currentStr = current.getFullYear() + "-" + 
+                ((current.getMonth() + 1) < 10 ? "0" : "") + (current.getMonth() + 1) + "-" +
+                (current.getDate() < 10 ? "0" : "") + current.getDate();
+
+            var dayElement = document.querySelector('.calendar-day[date="' + currentStr + '"]');
+            if (dayElement && dayElement.classList.contains('booked')) {
+                hasBookedDates = true;
+                break;
+            }
+
+            current.setDate(current.getDate() + 1);
+        }
+
         // Show loading state
         var priceDisplay = document.getElementById('priceDisplay');
         var priceAmount = document.getElementById('priceAmount');
         var priceDetails = document.getElementById('priceDetails');
+
+        if (hasBookedDates) {
+            priceAmount.textContent = 'Période non disponible - contient des dates réservées';
+            priceDisplay.style.display = 'block';
+            return;
+        }
 
         priceAmount.textContent = 'Calcul en cours...';
         priceDisplay.style.display = 'block';
