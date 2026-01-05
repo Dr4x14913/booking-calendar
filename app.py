@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory, render_template, flash, redirect, url_for, request
+from flask import Flask, send_from_directory, render_template, flash, redirect, url_for, request, jsonify
 import json
 import os
 from pathlib import Path
@@ -7,6 +7,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo
 from flask_wtf import FlaskForm
+import pandas as pd
+from io import StringIO
+from datetime import datetime
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'fallback-super-secret'
@@ -47,12 +51,24 @@ def update_dates():
     set_booked_dates(new_dates)
     return redirect("/admin_dashboard")
 
+@app.route('/update-prices', methods=['POST'])
+@login_required
+def update_prices():
+    """Handle price updates from admin panel"""
+    prices_data = request.form.get("prices")
+    if prices_data:
+      cols = ['date', '1 nigth', '2 nigth', '3 nigth', '4 nigth', '5 nigth', '6 nigth', '7 nigth', 'additional nigth']
+      df = pd.read_csv(StringIO(prices_data) , sep=' ', names=cols, header=None)
+    set_prices(df)
+    return redirect("/admin_dashboard")
+
 @app.route('/admin_dashboard')
 @login_required
 def admin():
     booked_dates = get_booked_dates()
-    print(booked_dates, flush=True)
-    return render_template('admin_panel.html', bookedDatesJson=booked_dates)
+    prices = get_prices().to_csv(sep=" ", index=False, header=None)
+
+    return render_template('admin_panel.html', bookedDatesJson=booked_dates, pricesCsv=prices)
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
@@ -98,7 +114,20 @@ def admin_logout():
 
 #---------------------------------------------------------------------------------
 #-- Routes
-#---------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------
+@app.route('/api/get-price', methods=['POST'])
+def get_price():
+  args       = request.get_json()
+  start_date = args["start_date"]
+  end_date   = args["end_date"]
+  duration = (datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days
+  print(start_date, end_date, duration, flush=True)
+  prices = get_prices()
+  price = int(prices.loc[prices["date"] == start_date][f"{duration} nigth"].iloc[0])
+  return jsonify({
+    "success": True, "total_price": price, "details": ""}
+  )
+
 @app.route('/')
 def serve_index():
     booked_dates = get_booked_dates()
@@ -119,6 +148,22 @@ def get_booked_dates():
 
     with open(json_file, "r") as f:
         return json.load(f)
+
+def set_prices(price_data):
+    """Store price data in JSON file"""
+    csv_file = "/app/prices.csv"
+    price_data["date"] = price_data['date'].str.replace("/","-")
+    price_data["date"] = price_data['date'].apply(lambda x: re.sub(r"(\d{2})-(\d{2})-(\d{4})", r"\3-\2-\1",x))
+    price_data.to_csv(csv_file, index=False, sep=';')
+
+def get_prices():
+    """Retrieve price data from JSON file"""
+    csv_file = "/app/prices.csv"
+    if not Path(csv_file).exists():
+      return pd.DataFrame()
+
+    prices = pd.read_csv(csv_file, sep=';')
+    return prices
 
 def get_hashed_password():
     json_file = "/app/password_config.json"

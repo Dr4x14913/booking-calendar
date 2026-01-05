@@ -3,3 +3,4 @@ pathlib
 Flask-Login
 Flask-WTF
 gunicorn
+pandas

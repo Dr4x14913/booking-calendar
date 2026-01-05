@@ -39,6 +39,25 @@
           </div>
           </form>
         </div>
+
+        <div class="settings-prices-section">
+          <form method="post" class="prices-form" action="/update-prices">
+            <div class="calendar-section">
+              <h3>Prices Management</h3>
+              <p class="settings-description">Set prices for each date. Format: DD/MM/YYYY followed by 7 space-separated prices (one for each day of the week). Example:</p>
+              <pre style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px; font-size: 0.9em;">
+28/11/2026	300 350 420 470 520 560 76
+29/11/2026	300 350 420 470 520 560 76
+30/11/2026	280 350 420 470 520 560 76</pre>
+
+              <div class="calendar-input-group">
+                <label for="prices">Prices (format: DD/MM/YYYY followed by 7 space-separated prices):</label>
+                <textarea id="prices" name="prices" rows="15">{{ pricesCsv }}</textarea>
+              </div>
+            </div>
+            <input type="submit" name="save_prices" value="Save Prices" class="calendar-button">
+          </form>
+        </div>
       </div>
     </div>
     <script>

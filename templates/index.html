@@ -6,12 +6,31 @@
 </head>
 <body>
 	<div class="calendar-container"></div>
+	<div class="price-display" id="priceDisplay" style="display: none;">
+		<div class="price-container">
+			<div class="price-header">Prix pour la période sélectionnée</div>
+			<div class="price-amount" id="priceAmount">0 €</div>
+			<div class="price-details" id="priceDetails"></div>
+		</div>
+	</div>
+	<div class="selection-info" id="selectionInfo" style="display: none;">
+		<div class="selection-container">
+			<div class="selection-text" id="selectionText"></div>
+		</div>
+	</div>
+	<script src="/static/date-range.js"></script>
 	<script>
 		// JavaScript for calendar navigation without page reload
 		document.addEventListener("DOMContentLoaded", function() {
 		// Store booked dates in JavaScript
 		//var bookedDates = ' . $bookedDatesJson . ';
 		var bookedDates = {{ bookedDatesJson|safe }};
+
+		// Variables for date range selection
+		var startDate = null;
+		var endDate = null;
+		var selectedDates = [];
+		var isSelectingRange = false;
 
 		// Current date
 		var currentDate = new Date();
@@ -41,10 +60,10 @@
 			'<div class="calendar-navigation">' +
 			'<div class="nav-button nav-button-ajax prev-month">&laquo; Prev</div>' +
 			'<div class="calendar-dropdowns">' +
-			'<select class="calendar-dropdown month-dropdown">' + 
+			'<select class="calendar-dropdown month-dropdown">' +
 			monthNames.map((monthName, index) => '<option value="' + index + '" ' + (index === month ? 'selected' : '') + '>' + monthName + '</option>').join('') +
 			'</select>' +
-			'<select class="calendar-dropdown year-dropdown">' + 
+			'<select class="calendar-dropdown year-dropdown">' +
 			Array.from({length: 5}, (_, i) => currentYear - 2 + i).map(yearOption => '<option value="' + yearOption + '" ' + (yearOption === year ? 'selected' : '') + '>' + yearOption + '</option>').join('') +
 			'</select>' +
 			'</div>' +
@@ -83,6 +102,9 @@
 
 		    // Reattach event listeners
 		    attachEventListeners();
+			    // Trigger event for date range selection to re-attach listeners
+			    var event = new CustomEvent("calendarRedrawn");
+			    window.dispatchEvent(event);
 		}
 
 		// Attach event listeners to navigation buttons and dropdowns
@@ -92,7 +114,7 @@
 		    var nextButtons = document.querySelectorAll(".next-month");
 		    var monthDropdowns = document.querySelectorAll(".month-dropdown");
 		    var yearDropdowns = document.querySelectorAll(".year-dropdown");
-		    
+
 		    // Remove previous listeners
 		    prevButtons.forEach(function(button) {
 			button.removeEventListener("click", navigateCalendar);
@@ -100,11 +122,11 @@
 		    nextButtons.forEach(function(button) {
 			button.removeEventListener("click", navigateCalendar);
 		    });
-		    
+
 		    monthDropdowns.forEach(function(dropdown) {
 			dropdown.removeEventListener("change", handleMonthChange);
 		    });
-		    
+
 		    yearDropdowns.forEach(function(dropdown) {
 			dropdown.removeEventListener("change", handleYearChange);
 		    });
@@ -116,11 +138,11 @@
 		    nextButtons.forEach(function(button) {
 			button.addEventListener("click", navigateCalendar);
 		    });
-		    
+
 		    monthDropdowns.forEach(function(dropdown) {
 			dropdown.addEventListener("change", handleMonthChange);
 		    });
-		    
+
 		    yearDropdowns.forEach(function(dropdown) {
 			dropdown.addEventListener("change", handleYearChange);
 		    });
