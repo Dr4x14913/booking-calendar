@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // Add range-selected class to all days between start and end
         var current = new Date(start);
         while (current <= end) {
-            var currentStr = current.getFullYear() + "-" + 
+            var currentStr = current.getFullYear() + "-" +
                 ((current.getMonth() + 1) < 10 ? "0" : "") + (current.getMonth() + 1) + "-" +
                 (current.getDate() < 10 ? "0" : "") + current.getDate();
 
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function() {
             var end = new Date(endDate);
             var days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
-            selectionText.textContent = 'Sélection: ' + 
+            selectionText.textContent = 'Sélection: ' +
                 startDate + ' → ' + endDate + ' (' + days + ' nuit' + (days > 1 ? 's' : '') + ')';
             selectionInfo.style.display = 'block';
         } else if (startDate) {
@@ -126,10 +126,10 @@ document.addEventListener("DOMContentLoaded", function() {
         var start = new Date(startDate);
         var end = new Date(endDate);
         var hasBookedDates = false;
-        
+
         var current = new Date(start);
         while (current <= end) {
-            var currentStr = current.getFullYear() + "-" + 
+            var currentStr = current.getFullYear() + "-" +
                 ((current.getMonth() + 1) < 10 ? "0" : "") + (current.getMonth() + 1) + "-" +
                 (current.getDate() < 10 ? "0" : "") + current.getDate();
 
@@ -150,6 +150,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (hasBookedDates) {
             priceAmount.textContent = 'Période non disponible - contient des dates réservées';
             priceDisplay.style.display = 'block';
+            priceDetails.textContent = '';
             return;
         }
 

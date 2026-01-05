@@ -117,16 +117,26 @@ def admin_logout():
 #--------------------------------------------------------------------------------
 @app.route('/api/get-price', methods=['POST'])
 def get_price():
-  args       = request.get_json()
-  start_date = args["start_date"]
-  end_date   = args["end_date"]
-  duration = (datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days
-  print(start_date, end_date, duration, flush=True)
-  prices = get_prices()
-  price = int(prices.loc[prices["date"] == start_date][f"{duration} nigth"].iloc[0])
-  return jsonify({
-    "success": True, "total_price": price, "details": ""}
-  )
+  try:
+    args       = request.get_json()
+    start_date = args["start_date"]
+    end_date   = args["end_date"]
+    duration = (datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days
+    prices = get_prices()
+    try:
+      price = int(prices.loc[prices["date"] == start_date][f"{duration} nigth"].iloc[0])
+    except IndexError:
+      return jsonify({
+        "success": True, "total_price": "?", "details": "Les dates selectionées ne sont pas standard, veilliez contacter le propriétaie."}
+      )
+    else:
+      return jsonify({
+        "success": True, "total_price": price, "details": ""}
+      )
+  except Exception as e:
+    return jsonify({
+      "success": False, "total_price": "Unknown", "details": "Fail to process data"}
+    ), 500
 
 @app.route('/')
 def serve_index():
