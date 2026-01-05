@@ -203,5 +203,34 @@ document.addEventListener("DOMContentLoaded", function() {
     // Re-attach listeners when calendar is redrawn
     window.addEventListener('calendarRedrawn', function() {
         addDateClickListeners();
+        // Reapply selection state after calendar is redrawn
+        restoreSelectionState();
     });
+
+    // Restore selection state after calendar redraw
+    function restoreSelectionState() {
+        // If we have a start date, apply the start-date class
+        if (startDate) {
+            var startDayElement = document.querySelector('.calendar-day[date="' + startDate + '"]');
+            if (startDayElement && !startDayElement.classList.contains('booked')) {
+                startDayElement.classList.add('start-date');
+            }
+        }
+
+        // If we have an end date, apply the end-date class
+        if (endDate) {
+            var endDayElement = document.querySelector('.calendar-day[date="' + endDate + '"]');
+            if (endDayElement && !endDayElement.classList.contains('booked')) {
+                endDayElement.classList.add('end-date');
+            }
+        }
+
+        // Reapply range selection if both dates are set
+        if (startDate && endDate) {
+            updateRangeSelection();
+        }
+
+        // Restore selection info display
+        updateSelectionInfo();
+    }
 });
