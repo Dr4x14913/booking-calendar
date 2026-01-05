@@ -3,15 +3,13 @@ import json
 import os
 from pathlib import Path
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, EqualTo
 from flask_wtf import FlaskForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'fallback-super-secret'
-
-HASHED_PASSWORD = 'scrypt:32768:8:1$xxnzWKJVYVZb9gAx$7ac30bebe582b4c63879304eb80dcbfb91f00a25996b454558045ce4b29254ce9265379a00eff1ba4b8d63134f3029c520c05c64882bc5dece0507810050e61d' # hash for 'toto'
 #---------------------------------------------------------------------------------
 #-- CLASSES FOR FLASK LOGIN
 #---------------------------------------------------------------------------------
@@ -23,6 +21,12 @@ class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Log In')
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('new_password')])
+    submit = SubmitField('Change Password')
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -58,13 +62,33 @@ def admin_login():
     form = LoginForm()
     if form.validate_on_submit():
         if (form.username.data == "admin" and
-            check_password_hash(HASHED_PASSWORD, form.password.data)):
+            check_password_hash(get_hashed_password(), form.password.data)):
             user = AdminUser("admin")
             login_user(user)
             return redirect('/admin_dashboard')
         else:
             flash('Invalid username or password')
     return render_template('login.html', form=form)
+
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        current_password = form.current_password.data
+        new_password = form.new_password.data
+
+        # Verify current password
+        if not check_password_hash(get_hashed_password(), current_password):
+            flash('Current password is incorrect', 'error')
+            return redirect(url_for('change_password'))
+
+        # Update password
+        set_hashed_password(new_password)
+        flash('Password changed successfully!', 'success')
+        return redirect(url_for('admin'))
+
+    return render_template('change_password.html', form=form)
 
 @app.route('/logout')
 @login_required
@@ -95,6 +119,24 @@ def get_booked_dates():
 
     with open(json_file, "r") as f:
         return json.load(f)
+
+def get_hashed_password():
+    json_file = "/app/password_config.json"
+    if not Path(json_file).exists():
+        # Create default password file if it doesn't exist
+        default_password = os.environ.get('DEFAULT_PASSWORD', 'toto')
+        set_hashed_password(default_password)
+
+    with open(json_file, "r") as f:
+        config = json.load(f)
+        return config.get("hashed_password", "")
+
+def set_hashed_password(password):
+    json_file = "/app/password_config.json"
+    hashed_password = generate_password_hash(password)
+    config = {"hashed_password": hashed_password}
+    with open(json_file, "w") as f:
+        json.dump(config, f)
 #---------------------------------------------------------------------------------
 #-- MAIN
 #---------------------------------------------------------------------------------
