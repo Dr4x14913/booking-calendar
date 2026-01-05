@@ -1,14 +1,17 @@
+<!-- admin_panel.html -->
 <!DOCTYPE html>
 <html>
   <head>
     <title>Calendar</title>
     <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
-    <div style="padding: 15px; background-color: #f0f0f0; border-bottom: 1px solid #ddd;">
-      <a href="/change-password" style="float: left; padding: 8px 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; margin-right: 10px;">Change Password</a>
-      <a href="/logout" style="float: right; padding: 8px 16px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 4px;">Logout</a>
+    <div class="admin-nav">
+      <a href="/change-password">Change Password</a>
+      <a href="/logout">Logout</a>
     </div>
+
     <div id="calendar-settings-content" class="calendar-settings-content">
       <div class="settings-flex-container">
         <div class="settings-calendar-section">
@@ -22,7 +25,9 @@
                 <button id="clear-dates">Libérer tout le mois</button>
               </div>
 
-              <div class="calendar-container settings-calendar" id="settings-calendar"></div>
+              <div class="calendar-container settings-calendar" id="settings-calendar">
+                <!-- Calendar will be populated by JavaScript -->
+              </div>
             </div>
         </div>
         <input type="submit" name="save_booked_dates" value="Save Booked Dates" class="calendar-button">
@@ -60,6 +65,7 @@
         </div>
       </div>
     </div>
+
     <script>
       function toggleClass(divobject, class_name) {
         if (divobject.classList.contains(class_name)) {
@@ -68,19 +74,8 @@
           divobject.classList.add(class_name);
         }
       }
-      document.addEventListener("DOMContentLoaded", function() {
-        // var toggleButton = document.getElementById("calendar-settings-toggle");
-        var settingsContent = document.getElementById("calendar-settings-content");
-        // toggleButton.addEventListener("click", function() {
-        //     if (settingsContent.style.display === "none") {
-        //         settingsContent.style.display = "flex";
-        //         toggleButton.textContent = "Hide Calendar Settings";
-        //     } else {
-        //         settingsContent.style.display = "none";
-        //         toggleButton.textContent = "Show Calendar Settings";
-        //     }
-        // });
 
+      document.addEventListener("DOMContentLoaded", function() {
         const settings_calendar = document.getElementById("settings-calendar");
         settings_calendar.addEventListener("click", function(e) {
           var textarea = document.getElementById("booked_dates");
@@ -130,8 +125,6 @@
         });
       });
 
-      ///////////////////////////////////
-
       // JavaScript for calendar navigation without page reload
       document.addEventListener("DOMContentLoaded", function() {
         var bookedDates = {{ bookedDatesJson|safe }};
@@ -160,9 +153,9 @@
 
           // Generate calendar HTML
           var html = '<div class="calendar-header">' +
-            '<h3>Calendrier des disponibilité</h3>' +
+            '<h3 class="calendar-title">Calendrier des disponibilité</h3>' +
             '<div class="calendar-navigation">' +
-            '<div class="nav-button nav-button-ajax prev-month">&laquo; Prev</div>' +
+            '<button class="nav-button prev-month">&laquo; Précédent</button>' +
             '<div class="calendar-dropdowns">' +
             '<select class="calendar-dropdown month-dropdown">' +
             monthNames.map((monthName, index) => '<option value="' + index + '" ' + (index === month ? 'selected' : '') + '>' + monthName + '</option>').join('') +
@@ -171,7 +164,7 @@
             Array.from({length: 5}, (_, i) => currentYear - 2 + i).map(yearOption => '<option value="' + yearOption + '" ' + (yearOption === year ? 'selected' : '') + '>' + yearOption + '</option>').join('') +
             '</select>' +
             '</div>' +
-            '<div class="nav-button nav-button-ajax next-month">Next &raquo;</div>' +
+            '<button class="nav-button next-month">Suivant &raquo;</button>' +
             '</div>' +
             '</div>' +
             '<div class="calendar-grid">';

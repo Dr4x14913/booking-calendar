@@ -1,187 +1,238 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html>
 <head>
     <title>Calendar</title>
     <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-	<div class="calendar-container"></div>
-	<div class="price-display" id="priceDisplay" style="display: none;">
-		<div class="price-container">
-			<div class="price-header">Prix pour la période sélectionnée</div>
-			<div class="price-amount" id="priceAmount">0 €</div>
-			<div class="price-details" id="priceDetails"></div>
-		</div>
-	</div>
-	<div class="selection-info" id="selectionInfo" style="display: none;">
-		<div class="selection-container">
-			<div class="selection-text" id="selectionText"></div>
-		</div>
-	</div>
-	<script src="/static/date-range.js"></script>
-	<script>
-		// JavaScript for calendar navigation without page reload
-		document.addEventListener("DOMContentLoaded", function() {
-		// Store booked dates in JavaScript
-		//var bookedDates = ' . $bookedDatesJson . ';
-		var bookedDates = {{ bookedDatesJson|safe }};
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <h3 class="calendar-title">Calendrier des disponibilité</h3>
+            <div class="calendar-navigation">
+                <button class="nav-button prev-month">&laquo; Précédent</button>
+                <div class="calendar-dropdowns">
+                    <select class="calendar-dropdown month-dropdown">
+                        <!-- Month options will be populated by JavaScript -->
+                    </select>
+                    <select class="calendar-dropdown year-dropdown">
+                        <!-- Year options will be populated by JavaScript -->
+                    </select>
+                </div>
+                <button class="nav-button next-month">Suivant &raquo;</button>
+            </div>
+        </div>
+        <div class="calendar-grid">
+            <!-- Calendar days will be populated by JavaScript -->
+        </div>
+    </div>
 
-		// Variables for date range selection
-		var startDate = null;
-		var endDate = null;
-		var selectedDates = [];
-		var isSelectingRange = false;
+    <div class="price-display" id="priceDisplay" style="display: none;">
+        <div class="price-container">
+            <div class="price-header">
+                <span class="price-text">Prix pour la période sélectionnée</span>
+                <span class="price-amount" id="priceAmount">0 €</span>
+            </div>
+            <div class="price-details" id="priceDetails"></div>
+        </div>
+    </div>
+    <div class="selection-info" id="selectionInfo" style="display: none;">
+        <div class="selection-container">
+            <div class="selection-text" id="selectionText"></div>
+        </div>
+    </div>
+    <div class="hints-container" id="hintContainer" style="display:none;">
+      <div class="hint-item">
+        <span class="hint-text">Tip: Use keyboard shortcuts</span>
+      </div>
+    </div>
 
-		// Current date
-		var currentDate = new Date();
-		var currentYear = currentDate.getFullYear();
-		var currentMonth = currentDate.getMonth(); // 0-based month
+    <script src="/static/date-range.js"></script>
+    <script>
+        // JavaScript for calendar navigation without page reload
+        document.addEventListener("DOMContentLoaded", function() {
+            // Store booked dates in JavaScript
+            var bookedDates = {{ bookedDatesJson|safe }};
 
-		// Calendar display function
-		function displayCalendar(year, month) {
-		    // Get calendar container
-		    var calendarContainer = document.querySelector(".calendar-container");
-		    var monthNames = ["janvier", "février", "mars", "avril", "mai", "juin",
-				      "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+            // Variables for date range selection
+            var startDate = null;
+            var endDate = null;
+            var selectedDates = [];
+            var isSelectingRange = false;
 
-		    // Create the first day of the month
-		    var firstDayOfMonth = new Date(year, month, 1);
-		    var daysInMonth = new Date(year, month + 1, 0).getDate();
-		    var firstDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday, etc.
+            // Current date
+            var currentDate = new Date();
+            var currentYear = currentDate.getFullYear();
+            var currentMonth = currentDate.getMonth(); // 0-based month
 
-		    // Adjust for Sunday being 0 in JavaScript but 7 in PHP
-		    if (firstDayOfWeek === 0) {
-			firstDayOfWeek = 7;
-		    }
+            // Calendar display function
+            function displayCalendar(year, month) {
+                // Get calendar container
+                var calendarContainer = document.querySelector(".calendar-container");
+                var monthNames = ["janvier", "février", "mars", "avril", "mai", "juin",
+                                  "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
-		    // Generate calendar HTML
-		    var html = '<div class="calendar-header">' +
-			'<h3>Calendrier des disponibilité</h3>' +
-			'<div class="calendar-navigation">' +
-			'<div class="nav-button nav-button-ajax prev-month">&laquo; Prev</div>' +
-			'<div class="calendar-dropdowns">' +
-			'<select class="calendar-dropdown month-dropdown">' +
-			monthNames.map((monthName, index) => '<option value="' + index + '" ' + (index === month ? 'selected' : '') + '>' + monthName + '</option>').join('') +
-			'</select>' +
-			'<select class="calendar-dropdown year-dropdown">' +
-			Array.from({length: 5}, (_, i) => currentYear - 2 + i).map(yearOption => '<option value="' + yearOption + '" ' + (yearOption === year ? 'selected' : '') + '>' + yearOption + '</option>').join('') +
-			'</select>' +
-			'</div>' +
-			'<div class="nav-button nav-button-ajax next-month">Next &raquo;</div>' +
-			'</div>' +
-			'</div>' +
-			'<div class="calendar-grid">';
+                // Create the first day of the month
+                var firstDayOfMonth = new Date(year, month, 1);
+                var daysInMonth = new Date(year, month + 1, 0).getDate();
+                var firstDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday, etc.
 
-		    // Days of week header
-		    var days = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
-		    for (var i = 0; i < days.length; i++) {
-			html += '<div class="calendar-day-header">' + days[i] + '</div>';
-		    }
+                // Adjust for Sunday being 0 in JavaScript but 7 in PHP
+                if (firstDayOfWeek === 0) {
+                    firstDayOfWeek = 7;
+                }
 
-		    // Empty cells for days before the first day of the month
-		    for (var i = 1; i < firstDayOfWeek; i++) {
-			html += '<div class="calendar-empty"></div>';
-		    }
+                // Generate calendar HTML
+                var html = '<div class="calendar-header">' +
+                    '<h3 class="calendar-title">Calendrier des disponibilité</h3>' +
+                    '<div class="calendar-navigation">' +
+                    '<button class="nav-button prev-month">&laquo; Précédent</button>' +
+                    '<div class="calendar-dropdowns">' +
+                    '<select class="calendar-dropdown month-dropdown">' +
+                    monthNames.map((monthName, index) => '<option value="' + index + '" ' + (index === month ? 'selected' : '') + '>' + monthName + '</option>').join('') +
+                    '</select>' +
+                    '<select class="calendar-dropdown year-dropdown">' +
+                    Array.from({length: 5}, (_, i) => currentYear - 2 + i).map(yearOption => '<option value="' + yearOption + '" ' + (yearOption === year ? 'selected' : '') + '>' + yearOption + '</option>').join('') +
+                    '</select>' +
+                    '</div>' +
+                    '<button class="nav-button next-month">Suivant &raquo;</button>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="calendar-grid">';
 
-		    // Calendar days
-		    for (var day = 1; day <= daysInMonth; day++) {
-			var date = year + "-" + (month + 1 < 10 ? "0" : "") + (month + 1) + "-" + (day < 10 ? "0" : "") + day;
-			var isBooked = bookedDates.includes(date);
+                // Days of week header
+                var days = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+                for (var i = 0; i < days.length; i++) {
+                    html += '<div class="calendar-day-header">' + days[i] + '</div>';
+                }
 
-			if (isBooked) {
-			    html += '<div class="calendar-day booked" date="'+date+'">' + day + '</div>';
-			} else {
-			    html += '<div class="calendar-day available" date="'+date+'">' + day + '</div>';
-			}
-		    }
+                // Empty cells for days before the first day of the month
+                for (var i = 1; i < firstDayOfWeek; i++) {
+                    html += '<div class="calendar-empty"></div>';
+                }
 
-		    html += '</div>';
+                // Calendar days
+                for (var day = 1; day <= daysInMonth; day++) {
+                    var date = year + "-" + (month + 1 < 10 ? "0" : "") + (month + 1) + "-" + (day < 10 ? "0" : "") + day;
+                    var isBooked = bookedDates.includes(date);
 
-		    // Set the HTML to the container
-		    calendarContainer.innerHTML = html;
+                    if (isBooked) {
+                        html += '<div class="calendar-day booked" date="'+date+'">' + day + '</div>';
+                    } else {
+                        html += '<div class="calendar-day available" date="'+date+'">' + day + '</div>';
+                    }
+                }
 
-		    // Reattach event listeners
-		    attachEventListeners();
-			    // Trigger event for date range selection to re-attach listeners
-			    var event = new CustomEvent("calendarRedrawn");
-			    window.dispatchEvent(event);
-		}
+                html += '</div>';
 
-		// Attach event listeners to navigation buttons and dropdowns
-		function attachEventListeners() {
-		    // Remove existing event listeners to prevent duplicates
-		    var prevButtons = document.querySelectorAll(".prev-month");
-		    var nextButtons = document.querySelectorAll(".next-month");
-		    var monthDropdowns = document.querySelectorAll(".month-dropdown");
-		    var yearDropdowns = document.querySelectorAll(".year-dropdown");
+                // Set the HTML to the container
+                calendarContainer.innerHTML = html;
 
-		    // Remove previous listeners
-		    prevButtons.forEach(function(button) {
-			button.removeEventListener("click", navigateCalendar);
-		    });
-		    nextButtons.forEach(function(button) {
-			button.removeEventListener("click", navigateCalendar);
-		    });
+                // Reattach event listeners
+                attachEventListeners();
+                // Trigger event for date range selection to re-attach listeners
+                var event = new CustomEvent("calendarRedrawn");
+                window.dispatchEvent(event);
+            }
 
-		    monthDropdowns.forEach(function(dropdown) {
-			dropdown.removeEventListener("change", handleMonthChange);
-		    });
+            // Attach event listeners to navigation buttons and dropdowns
+            function attachEventListeners() {
+                // Remove existing event listeners to prevent duplicates
+                var prevButtons = document.querySelectorAll(".prev-month");
+                var nextButtons = document.querySelectorAll(".next-month");
+                var monthDropdowns = document.querySelectorAll(".month-dropdown");
+                var yearDropdowns = document.querySelectorAll(".year-dropdown");
 
-		    yearDropdowns.forEach(function(dropdown) {
-			dropdown.removeEventListener("change", handleYearChange);
-		    });
+                // Remove previous listeners
+                prevButtons.forEach(function(button) {
+                    button.removeEventListener("click", navigateCalendar);
+                });
+                nextButtons.forEach(function(button) {
+                    button.removeEventListener("click", navigateCalendar);
+                });
 
-		    // Add new event listeners
-		    prevButtons.forEach(function(button) {
-			button.addEventListener("click", navigateCalendar);
-		    });
-		    nextButtons.forEach(function(button) {
-			button.addEventListener("click", navigateCalendar);
-		    });
+                monthDropdowns.forEach(function(dropdown) {
+                    dropdown.removeEventListener("change", handleMonthChange);
+                });
 
-		    monthDropdowns.forEach(function(dropdown) {
-			dropdown.addEventListener("change", handleMonthChange);
-		    });
+                yearDropdowns.forEach(function(dropdown) {
+                    dropdown.removeEventListener("change", handleYearChange);
+                });
 
-		    yearDropdowns.forEach(function(dropdown) {
-			dropdown.addEventListener("change", handleYearChange);
-		    });
-		}
+                // Add new event listeners
+                prevButtons.forEach(function(button) {
+                    button.addEventListener("click", navigateCalendar);
+                });
+                nextButtons.forEach(function(button) {
+                    button.addEventListener("click", navigateCalendar);
+                });
 
-		// Navigation function
-		function navigateCalendar(e) {
-		    e.preventDefault();
-		    if (e.target.classList.contains("prev-month")) {
-			currentMonth--;
-			if (currentMonth < 0) {
-			    currentMonth = 11;
-			    currentYear--;
-			}
-		    } else if (e.target.classList.contains("next-month")) {
-			currentMonth++;
-			if (currentMonth > 11) {
-			    currentMonth = 0;
-			    currentYear++;
-			}
-		    }
-		    displayCalendar(currentYear, currentMonth);
-		}
+                monthDropdowns.forEach(function(dropdown) {
+                    dropdown.addEventListener("change", handleMonthChange);
+                });
 
-		// Month change handler
-		function handleMonthChange(e) {
-		    currentMonth = parseInt(e.target.value);
-		    displayCalendar(currentYear, currentMonth);
-		}
+                yearDropdowns.forEach(function(dropdown) {
+                    dropdown.addEventListener("change", handleYearChange);
+                });
 
-		// Year change handler
-		function handleYearChange(e) {
-		    currentYear = parseInt(e.target.value);
-		    displayCalendar(currentYear, currentMonth);
-		}
+                // Add event listeners for calendar days
+                document.querySelectorAll('.calendar-day').forEach(day => {
+                    day.addEventListener('click', function(e) {
+                        if (this.classList.contains('booked')) return;
 
-		// Initialize calendar display
-		displayCalendar(currentYear, currentMonth);
-		});
-	</script>
+                        if (startDate === null) {
+                            startDate = this;
+                            this.classList.add('start-date');
+                        } else if (endDate === null) {
+                            endDate = this;
+                            this.classList.add('end-date');
+                        } else {
+                            // Reset selection
+                            startDate.classList.remove('start-date');
+                            endDate.classList.remove('end-date');
+                            startDate = this;
+                            endDate = null;
+                            this.classList.add('start-date');
+                        }
+                    });
+                });
+            }
+
+            // Navigation function
+            function navigateCalendar(e) {
+                e.preventDefault();
+                if (e.target.classList.contains("prev-month")) {
+                    currentMonth--;
+                    if (currentMonth < 0) {
+                        currentMonth = 11;
+                        currentYear--;
+                    }
+                } else if (e.target.classList.contains("next-month")) {
+                    currentMonth++;
+                    if (currentMonth > 11) {
+                        currentMonth = 0;
+                        currentYear++;
+                    }
+                }
+                displayCalendar(currentYear, currentMonth);
+            }
+
+            // Month change handler
+            function handleMonthChange(e) {
+                currentMonth = parseInt(e.target.value);
+                displayCalendar(currentYear, currentMonth);
+            }
+
+            // Year change handler
+            function handleYearChange(e) {
+                currentYear = parseInt(e.target.value);
+                displayCalendar(currentYear, currentMonth);
+            }
+
+            // Initialize calendar display
+            displayCalendar(currentYear, currentMonth);
+        });
+    </script>
 </body>
 </html>

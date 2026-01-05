@@ -90,8 +90,7 @@ document.addEventListener("DOMContentLoaded", function() {
             var end = new Date(endDate);
             var days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
-            selectionText.textContent = 'Sélection: ' +
-                startDate + ' → ' + endDate + ' (' + days + ' nuit' + (days > 1 ? 's' : '') + ')';
+            selectionText.textContent = startDate + ' → ' + endDate + ' (' + days + ' nuit' + (days > 1 ? 's' : '') + ')';
             selectionInfo.style.display = 'block';
         } else if (startDate) {
             selectionText.textContent = 'Début: ' + startDate + ' - Sélectionnez la fin';
