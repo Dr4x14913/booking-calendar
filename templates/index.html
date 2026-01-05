@@ -175,28 +175,6 @@
                 yearDropdowns.forEach(function(dropdown) {
                     dropdown.addEventListener("change", handleYearChange);
                 });
-
-                // Add event listeners for calendar days
-                document.querySelectorAll('.calendar-day').forEach(day => {
-                    day.addEventListener('click', function(e) {
-                        if (this.classList.contains('booked')) return;
-
-                        if (startDate === null) {
-                            startDate = this;
-                            this.classList.add('start-date');
-                        } else if (endDate === null) {
-                            endDate = this;
-                            this.classList.add('end-date');
-                        } else {
-                            // Reset selection
-                            startDate.classList.remove('start-date');
-                            endDate.classList.remove('end-date');
-                            startDate = this;
-                            endDate = null;
-                            this.classList.add('start-date');
-                        }
-                    });
-                });
             }
 
             // Navigation function

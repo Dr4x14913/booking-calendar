@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Handle date click for range selection
     function handleDateClick(e) {
         var dateElement = e.target.closest('.calendar-day');
-        if (!dateElement || dateElement.classList.contains('booked')) {
+        if (!dateElement || dateElement.classList.contains('booked') || dateElement.classList.contains('disabled')) {
             return;
         }
 
@@ -36,8 +36,12 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        // If we have both start and end dates, start a new selection
+        // If we have both start and end dates, check if we're selecting a new start date
         if (startDate && endDate) {
+            // Don't allow selecting a date before the current start date
+            if (dateObj < new Date(startDate)) {
+                return;
+            }
             clearSelection();
         }
 
@@ -46,6 +50,33 @@ document.addEventListener("DOMContentLoaded", function() {
         dateElement.classList.add('start-date');
         isSelectingRange = true;
         updateSelectionInfo();
+
+        // Disable dates before the start date
+        disableDatesBeforeStart();
+    }
+
+    // Disable dates before the start date
+    function disableDatesBeforeStart() {
+        var calendarDays = document.querySelectorAll('.calendar-day');
+        calendarDays.forEach(function(day) {
+            var dateStr = day.getAttribute('date');
+            if (dateStr && startDate) {
+                var dateObj = new Date(dateStr);
+                var startObj = new Date(startDate);
+
+                // If date is before start date and not already booked, disable it
+                if (dateObj < startObj && !day.classList.contains('booked')) {
+                    day.classList.add('disabled');
+                    day.style.cursor = 'not-allowed';
+                    day.style.opacity = '0.5';
+                } else if (dateObj >= startObj && day.classList.contains('disabled')) {
+                    // Re-enable dates that are on or after start date
+                    day.classList.remove('disabled');
+                    day.style.cursor = '';
+                    day.style.opacity = '';
+                }
+            }
+        });
     }
 
     // Update the visual range selection
@@ -110,6 +141,14 @@ document.addEventListener("DOMContentLoaded", function() {
         var selectedDays = document.querySelectorAll('.calendar-day.start-date, .calendar-day.end-date, .calendar-day.range-selected');
         selectedDays.forEach(function(day) {
             day.classList.remove('start-date', 'end-date', 'range-selected');
+        });
+
+        // Re-enable all dates
+        var allDays = document.querySelectorAll('.calendar-day');
+        allDays.forEach(function(day) {
+            day.classList.remove('disabled');
+            day.style.cursor = '';
+            day.style.opacity = '';
         });
 
         // Hide price and selection info

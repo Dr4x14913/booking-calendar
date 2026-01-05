@@ -203,6 +203,20 @@ body {
     opacity: 1;
 }
 
+.calendar-day.disabled {
+    background-color: #e0e0e0;
+    color: #999999;
+    border-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.calendar-day.disabled:hover {
+    transform: none;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
 .calendar-day.available {
     background-color: var(--secondary-color);
     color: var(--dark-color);
