@@ -145,10 +145,13 @@ document.addEventListener("DOMContentLoaded", function() {
         var priceDisplay = document.getElementById('priceDisplay');
         var priceAmount = document.getElementById('priceAmount');
         var priceDetails = document.getElementById('priceDetails');
+        var selectionInfo = document.getElementById('selectionInfo');
+        var selectionText = document.getElementById('selectionText');
 
         if (hasBookedDates) {
-            priceAmount.textContent = 'Période non disponible - contient des dates réservées';
-            priceDisplay.style.display = 'block';
+            selectionText.textContent = 'Période non disponible - contient des dates réservées';
+            selectionInfo.style.display = 'block';
+            priceDisplay.style.display = 'none';
             priceDetails.textContent = '';
             return;
         }
@@ -178,7 +181,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     priceDetails.textContent = '';
                 }
             } else {
-                priceAmount.textContent = 'Erreur: ' + (data.message || 'Prix indisponible');
+                priceAmount.textContent = 'Prix indisponible, contactez le propriètaire pour plus d\'informations';
                 priceDetails.textContent = '';
             }
         })

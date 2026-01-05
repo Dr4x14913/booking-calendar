@@ -285,7 +285,7 @@ body {
     background: var(--light-color);
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    max-width: 500px;
+    max-width: auto;
     border: 1px solid var(--dark-color);
     display: flex;
     flex-direction: column;
