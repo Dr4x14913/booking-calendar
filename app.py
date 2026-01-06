@@ -9,7 +9,7 @@ from wtforms.validators import DataRequired, EqualTo
 from flask_wtf import FlaskForm
 import pandas as pd
 from io import StringIO
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 app = Flask(__name__)
@@ -115,6 +115,27 @@ def admin_logout():
 #---------------------------------------------------------------------------------
 #-- Routes
 #--------------------------------------------------------------------------------
+@app.route('/api/get-allowed-start-dates', methods=['GET'])
+def get_allowed_start_dates():
+  prices = get_prices()
+  return jsonify(list(prices['date']))
+
+
+@app.route('/api/get-forbidden-end-dates', methods=['GET'])
+def get_forbidden_end_dates():
+  try:
+    if not 'start_date' in request.args:
+      return jsonify({"error": "Missing start_date get argument"}), 400
+    start_date        = request.args.get('start_date')
+    prices            = get_prices()
+    df                = prices.loc[prices["date"] == start_date]
+    not_allowed       = [int(i.replace(' nigth', '')) for i in df.columns[df.eq(-1).any()]]
+    start_datetime    = datetime.strptime(start_date, "%Y-%m-%d")
+    not_allowed_dates = [(start_datetime + timedelta(days=i)).strftime("%Y-%m-%d") for i in not_allowed]
+    return jsonify(not_allowed_dates)
+  except Exception as e:
+    return jsonify({"error": f"{e}"}), 500
+
 @app.route('/api/get-price', methods=['POST'])
 def get_price():
   try:
