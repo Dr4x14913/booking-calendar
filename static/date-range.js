@@ -63,6 +63,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // Fetch forbidden end dates for this start date
         fetchForbiddenEndDates(dateStr);
+
+        // Fetch and disable booked dates that come after the start date
+        fetchAndDisableBookedDates();
     }
 
     // Disable dates before the start date and forbidden end dates
@@ -187,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Fetch forbidden end dates for a given start date
     function fetchForbiddenEndDates(startDateStr) {
         forbiddenEndDates = []; // Reset forbidden dates
-        
+
         fetch('/api/get-forbidden-end-dates?start_date=' + startDateStr)
             .then(response => response.json())
             .then(data => {
@@ -197,6 +200,48 @@ document.addEventListener("DOMContentLoaded", function() {
             })
             .catch(error => {
                 console.error('Error fetching forbidden end dates:', error);
+            });
+    }
+
+    // Fetch all booked dates and disable them after a start date is selected
+    function fetchAndDisableBookedDates() {
+        if (!startDate) return;
+
+        fetch('/api/get-booked-dates')
+            .then(response => response.json())
+            .then(bookedDates => {
+                var startObj = new Date(startDate);
+
+                // Find the first booked date that comes after the start date
+                var firstBookedAfterStart = null;
+                bookedDates.forEach(function(bookedDateStr) {
+                    var bookedDate = new Date(bookedDateStr);
+                    if (bookedDate >= startObj) {
+                        if (firstBookedAfterStart === null || bookedDate < firstBookedAfterStart) {
+                            firstBookedAfterStart = bookedDate;
+                        }
+                    }
+                });
+
+                // If we found a booked date after the start, disable all dates from that booked date onward
+                if (firstBookedAfterStart) {
+                    var calendarDays = document.querySelectorAll('.calendar-day');
+                    calendarDays.forEach(function(day) {
+                        var dateStr = day.getAttribute('date');
+                        if (dateStr) {
+                            var dateObj = new Date(dateStr);
+                            // Disable the booked date and all dates after it
+                            if (dateObj >= firstBookedAfterStart && !day.classList.contains('booked')) {
+                                day.classList.add('disabled');
+                                day.style.cursor = 'not-allowed';
+                                day.style.opacity = '0.5';
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching booked dates:', error);
             });
     }
 
@@ -213,12 +258,15 @@ document.addEventListener("DOMContentLoaded", function() {
             day.classList.remove('start-date', 'end-date', 'range-selected');
         });
 
-        // Re-enable all dates
+        // Re-enable all dates (except those that are actually booked)
         var allDays = document.querySelectorAll('.calendar-day');
         allDays.forEach(function(day) {
-            day.classList.remove('disabled');
-            day.style.cursor = '';
-            day.style.opacity = '';
+            // Only remove disabled class if the date is not actually booked
+            if (!day.classList.contains('booked')) {
+                day.classList.remove('disabled');
+                day.style.cursor = '';
+                day.style.opacity = '';
+            }
         });
 
         // Reapply allowed start dates restriction
@@ -233,40 +281,10 @@ document.addEventListener("DOMContentLoaded", function() {
     function fetchPriceForRange() {
         if (!startDate || !endDate) return;
 
-        // Check if the selected range includes any booked dates
-        var start = new Date(startDate);
-        var end = new Date(endDate);
-        var hasBookedDates = false;
-
-        var current = new Date(start);
-        while (current <= end) {
-            var currentStr = current.getFullYear() + "-" +
-                ((current.getMonth() + 1) < 10 ? "0" : "") + (current.getMonth() + 1) + "-" +
-                (current.getDate() < 10 ? "0" : "") + current.getDate();
-
-            var dayElement = document.querySelector('.calendar-day[date="' + currentStr + '"]');
-            if (dayElement && dayElement.classList.contains('booked')) {
-                hasBookedDates = true;
-                break;
-            }
-
-            current.setDate(current.getDate() + 1);
-        }
-
         // Show loading state
         var priceDisplay = document.getElementById('priceDisplay');
         var priceAmount = document.getElementById('priceAmount');
         var priceDetails = document.getElementById('priceDetails');
-        var selectionInfo = document.getElementById('selectionInfo');
-        var selectionText = document.getElementById('selectionText');
-
-        if (hasBookedDates) {
-            selectionText.textContent = 'Période non disponible - contient des dates réservées';
-            selectionInfo.style.display = 'block';
-            priceDisplay.style.display = 'none';
-            priceDetails.textContent = '';
-            return;
-        }
 
         priceAmount.textContent = 'Calcul en cours...';
         priceDisplay.style.display = 'block';
@@ -328,6 +346,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // Reapply disabled states for forbidden end dates if we have a start date
         if (startDate) {
             disableDatesBeforeStart();
+            fetchAndDisableBookedDates();
         }
     });
 
