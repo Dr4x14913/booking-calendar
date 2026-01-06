@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", function() {
     var endDate = null;
     var selectedDates = [];
     var isSelectingRange = false;
+    var allowedStartDates = [];
+    var forbiddenEndDates = [];
 
     // Handle date click for range selection
     function handleDateClick(e) {
@@ -45,17 +47,25 @@ document.addEventListener("DOMContentLoaded", function() {
             clearSelection();
         }
 
+        // Only allow selecting dates that are in the allowed start dates list
+        if (allowedStartDates.length > 0 && !allowedStartDates.includes(dateStr)) {
+            return;
+        }
+
         // Set start date
         startDate = dateStr;
         dateElement.classList.add('start-date');
         isSelectingRange = true;
         updateSelectionInfo();
 
-        // Disable dates before the start date
+        // Disable dates before the start date and forbidden end dates
         disableDatesBeforeStart();
+
+        // Fetch forbidden end dates for this start date
+        fetchForbiddenEndDates(dateStr);
     }
 
-    // Disable dates before the start date
+    // Disable dates before the start date and forbidden end dates
     function disableDatesBeforeStart() {
         var calendarDays = document.querySelectorAll('.calendar-day');
         calendarDays.forEach(function(day) {
@@ -71,12 +81,27 @@ document.addEventListener("DOMContentLoaded", function() {
                     day.style.opacity = '0.5';
                 } else if (dateObj >= startObj && day.classList.contains('disabled')) {
                     // Re-enable dates that are on or after start date
-                    day.classList.remove('disabled');
-                    day.style.cursor = '';
-                    day.style.opacity = '';
+                    // But keep forbidden end dates disabled
+                    if (!forbiddenEndDates.includes(dateStr)) {
+                        day.classList.remove('disabled');
+                        day.style.cursor = '';
+                        day.style.opacity = '';
+                    }
                 }
             }
         });
+
+        // Disable forbidden end dates
+        if (forbiddenEndDates.length > 0 && startDate) {
+            forbiddenEndDates.forEach(function(forbiddenDate) {
+                var forbiddenDay = document.querySelector('.calendar-day[date="' + forbiddenDate + '"]');
+                if (forbiddenDay && !forbiddenDay.classList.contains('booked')) {
+                    forbiddenDay.classList.add('disabled');
+                    forbiddenDay.style.cursor = 'not-allowed';
+                    forbiddenDay.style.opacity = '0.5';
+                }
+            });
+        }
     }
 
     // Update the visual range selection
@@ -131,11 +156,56 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    // Fetch allowed start dates from backend
+    function fetchAllowedStartDates() {
+        fetch('/api/get-allowed-start-dates')
+            .then(response => response.json())
+            .then(data => {
+                allowedStartDates = data;
+                disableNonAllowedStartDates();
+            })
+            .catch(error => {
+                console.error('Error fetching allowed start dates:', error);
+            });
+    }
+
+    // Disable dates that are not in the allowed start dates list
+    function disableNonAllowedStartDates() {
+        if (allowedStartDates.length === 0) return;
+
+        var calendarDays = document.querySelectorAll('.calendar-day');
+        calendarDays.forEach(function(day) {
+            var dateStr = day.getAttribute('date');
+            if (dateStr && !day.classList.contains('booked') && !allowedStartDates.includes(dateStr)) {
+                day.classList.add('disabled');
+                day.style.cursor = 'not-allowed';
+                day.style.opacity = '0.5';
+            }
+        });
+    }
+
+    // Fetch forbidden end dates for a given start date
+    function fetchForbiddenEndDates(startDateStr) {
+        forbiddenEndDates = []; // Reset forbidden dates
+        
+        fetch('/api/get-forbidden-end-dates?start_date=' + startDateStr)
+            .then(response => response.json())
+            .then(data => {
+                forbiddenEndDates = data;
+                // Reapply date disabling to include forbidden end dates
+                disableDatesBeforeStart();
+            })
+            .catch(error => {
+                console.error('Error fetching forbidden end dates:', error);
+            });
+    }
+
     // Clear all selections
     function clearSelection() {
         startDate = null;
         endDate = null;
         selectedDates = [];
+        forbiddenEndDates = [];
 
         // Remove all selection classes
         var selectedDays = document.querySelectorAll('.calendar-day.start-date, .calendar-day.end-date, .calendar-day.range-selected');
@@ -150,6 +220,9 @@ document.addEventListener("DOMContentLoaded", function() {
             day.style.cursor = '';
             day.style.opacity = '';
         });
+
+        // Reapply allowed start dates restriction
+        disableNonAllowedStartDates();
 
         // Hide price and selection info
         document.getElementById('priceDisplay').style.display = 'none';
@@ -242,11 +315,20 @@ document.addEventListener("DOMContentLoaded", function() {
     // Initialize date click listeners
     addDateClickListeners();
 
+    // Fetch allowed start dates when page loads
+    fetchAllowedStartDates();
+
     // Re-attach listeners when calendar is redrawn
     window.addEventListener('calendarRedrawn', function() {
         addDateClickListeners();
         // Reapply selection state after calendar is redrawn
         restoreSelectionState();
+        // Reapply disabled states for allowed start dates
+        disableNonAllowedStartDates();
+        // Reapply disabled states for forbidden end dates if we have a start date
+        if (startDate) {
+            disableDatesBeforeStart();
+        }
     });
 
     // Restore selection state after calendar redraw
