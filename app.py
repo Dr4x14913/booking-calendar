@@ -58,7 +58,7 @@ def update_prices():
     prices_data = request.form.get("prices")
     if prices_data:
       cols = ['date', '1 nigth', '2 nigth', '3 nigth', '4 nigth', '5 nigth', '6 nigth', '7 nigth', 'additional nigth']
-      df = pd.read_csv(StringIO(prices_data) , sep=' ', names=cols, header=None)
+      df = pd.read_csv(StringIO(prices_data) , sep='\s+', names=cols, header=None)
     set_prices(df)
     return redirect("/admin_dashboard")
 
@@ -159,6 +159,10 @@ def get_price():
       "success": False, "total_price": "Unknown", "details": "Fail to process data"}
     ), 500
 
+@app.route('/api/get-booked-dates', methods=['GET'])
+def get_booked_dates_api():
+    return jsonify(get_booked_dates())
+
 @app.route('/')
 def serve_index():
     booked_dates = get_booked_dates()
@@ -185,6 +189,7 @@ def set_prices(price_data):
     csv_file = "/app/prices.csv"
     price_data["date"] = price_data['date'].str.replace("/","-")
     price_data["date"] = price_data['date'].apply(lambda x: re.sub(r"(\d{2})-(\d{2})-(\d{4})", r"\3-\2-\1",x))
+    price_data.sort_values("date", inplace=True)
     price_data.to_csv(csv_file, index=False, sep=';')
 
 def get_prices():
