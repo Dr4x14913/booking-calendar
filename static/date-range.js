@@ -58,11 +58,11 @@ document.addEventListener("DOMContentLoaded", function() {
         isSelectingRange = true;
         updateSelectionInfo();
 
-        // Disable dates before the start date and forbidden end dates
-        disableDatesBeforeStart();
-
         // Fetch forbidden end dates for this start date
         fetchForbiddenEndDates(dateStr);
+
+        // Disable dates before the start date and forbidden end dates
+        disableDatesBeforeStart();
 
         // Fetch and disable booked dates that come after the start date
         fetchAndDisableBookedDates();
@@ -206,11 +206,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 // Find the first booked date that comes after the start date
                 var firstBookedAfterStart = null;
+                var firstBookedAfterStartStr = null;
                 bookedDates.forEach(function(bookedDateStr) {
                     var bookedDate = new Date(bookedDateStr);
                     if (bookedDate > startObj) {
                         if (firstBookedAfterStart === null || bookedDate < firstBookedAfterStart) {
                             firstBookedAfterStart = bookedDate;
+                            firstBookedAfterStartStr = bookedDateStr;
                         }
                     }
                 });
@@ -228,6 +230,12 @@ document.addEventListener("DOMContentLoaded", function() {
                             }
                         }
                     });
+                    console.log(firstBookedAfterStart);
+                    const firstBookedAfterStartElement = document.querySelector('[date="' + firstBookedAfterStartStr + '"]');
+                    console.log(firstBookedAfterStartElement);
+                    firstBookedAfterStartElement.classList.remove('disabled', "booked");
+                    firstBookedAfterStartElement.classList.add('available', 'temp-available');
+                    console.log(firstBookedAfterStartElement);
                 }
             })
             .catch(error => {
@@ -254,6 +262,10 @@ document.addEventListener("DOMContentLoaded", function() {
             // Only remove disabled class if the date is not actually booked
             if (!day.classList.contains('booked')) {
                 day.classList.remove('disabled');
+            }
+            if (day.classList.contains('temp-available')){
+              day.classList.remove('temp-available', 'available');
+              day.classList.add('booked');
             }
         });
 
