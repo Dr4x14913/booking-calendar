@@ -80,15 +80,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 // If date is before start date and not already booked, disable it
                 if (dateObj < startObj && !day.classList.contains('booked')) {
                     day.classList.add('disabled');
-                    day.style.cursor = 'not-allowed';
-                    day.style.opacity = '0.5';
                 } else if (dateObj >= startObj && day.classList.contains('disabled')) {
                     // Re-enable dates that are on or after start date
                     // But keep forbidden end dates disabled
                     if (!forbiddenEndDates.includes(dateStr)) {
                         day.classList.remove('disabled');
-                        day.style.cursor = '';
-                        day.style.opacity = '';
                     }
                 }
             }
@@ -100,8 +96,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 var forbiddenDay = document.querySelector('.calendar-day[date="' + forbiddenDate + '"]');
                 if (forbiddenDay && !forbiddenDay.classList.contains('booked')) {
                     forbiddenDay.classList.add('disabled');
-                    forbiddenDay.style.cursor = 'not-allowed';
-                    forbiddenDay.style.opacity = '0.5';
                 }
             });
         }
@@ -181,8 +175,6 @@ document.addEventListener("DOMContentLoaded", function() {
             var dateStr = day.getAttribute('date');
             if (dateStr && !day.classList.contains('booked') && !allowedStartDates.includes(dateStr)) {
                 day.classList.add('disabled');
-                day.style.cursor = 'not-allowed';
-                day.style.opacity = '0.5';
             }
         });
     }
@@ -216,7 +208,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 var firstBookedAfterStart = null;
                 bookedDates.forEach(function(bookedDateStr) {
                     var bookedDate = new Date(bookedDateStr);
-                    if (bookedDate >= startObj) {
+                    if (bookedDate > startObj) {
                         if (firstBookedAfterStart === null || bookedDate < firstBookedAfterStart) {
                             firstBookedAfterStart = bookedDate;
                         }
@@ -233,8 +225,6 @@ document.addEventListener("DOMContentLoaded", function() {
                             // Disable the booked date and all dates after it
                             if (dateObj >= firstBookedAfterStart && !day.classList.contains('booked')) {
                                 day.classList.add('disabled');
-                                day.style.cursor = 'not-allowed';
-                                day.style.opacity = '0.5';
                             }
                         }
                     });
@@ -264,8 +254,6 @@ document.addEventListener("DOMContentLoaded", function() {
             // Only remove disabled class if the date is not actually booked
             if (!day.classList.contains('booked')) {
                 day.classList.remove('disabled');
-                day.style.cursor = '';
-                day.style.opacity = '';
             }
         });
 
