@@ -58,7 +58,7 @@ def update_prices():
     prices_data = request.form.get("prices")
     if prices_data:
       cols = ['date', '1 nigth', '2 nigth', '3 nigth', '4 nigth', '5 nigth', '6 nigth', '7 nigth', 'additional nigth']
-      df = pd.read_csv(StringIO(prices_data) , sep='\s+', names=cols, header=None)
+      df = pd.read_csv(StringIO(prices_data) , sep=r'\s+', names=cols, header=None)
     set_prices(df)
     return redirect("/admin_dashboard")
 
@@ -117,9 +117,8 @@ def admin_logout():
 #--------------------------------------------------------------------------------
 @app.route('/api/get-allowed-start-dates', methods=['GET'])
 def get_allowed_start_dates():
-  prices = get_prices()
-  return jsonify(list(prices['date']))
-
+  allowed = get_allowed_start_dates()
+  return jsonify(allowed)
 
 @app.route('/api/get-forbidden-end-dates', methods=['GET'])
 def get_forbidden_end_dates():
@@ -165,11 +164,29 @@ def get_booked_dates_api():
 
 @app.route('/')
 def serve_index():
-    booked_dates = get_booked_dates()
-    return render_template('index.html', bookedDatesJson=booked_dates)
+  booked_dates_shown = []
+  booked_dates = get_booked_dates()
+  for i in booked_dates:
+    if not (datetime.strptime(i, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d") in booked_dates:
+      continue
+    booked_dates_shown.append(i)
+  return render_template('index.html', bookedDatesJson=booked_dates_shown)
 #---------------------------------------------------------------------------------
 #-- FUNCTIONS
 #---------------------------------------------------------------------------------
+def get_allowed_start_dates():
+  prices_dates = [datetime.strptime(i, "%Y-%m-%d") for i in list(get_prices()['date'])]
+  booked_dates = [datetime.strptime(i, "%Y-%m-%d") for i in get_booked_dates()]
+  allowed = []
+  for date in prices_dates:
+    if date in booked_dates:
+      if not date + timedelta(days=1) in booked_dates: # is the next day free
+        allowed.append(date.strftime("%Y-%m-%d"))
+        continue
+      continue
+    allowed.append(date.strftime("%Y-%m-%d"))
+  return allowed
+
 def set_booked_dates(dates):
     json_file = "/app/booked_dates.json"
     with open(json_file, "w") as f:
