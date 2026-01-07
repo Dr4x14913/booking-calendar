@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from flask_mail import Mail, Message
 from werkzeug.security import check_password_hash, generate_password_hash
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo
@@ -14,6 +15,19 @@ import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'fallback-super-secret'
+
+# Configuration for Flask-Mail
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = os.environ.get("GMAIL_EMAIL")
+app.config['MAIL_PASSWORD'] = os.environ.get("GOOGLE_APP_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get("GMAIL_EMAIL")
+
+# Initialize Flask-Mail
+mail = Mail(app)
+
 #---------------------------------------------------------------------------------
 #-- CLASSES FOR FLASK LOGIN
 #---------------------------------------------------------------------------------
@@ -44,6 +58,20 @@ def load_user(user_id):
 #---------------------------------------------------------------------------------
 #-- Admin routes
 #---------------------------------------------------------------------------------
+@app.route('/send_email', methods=['POST'])
+def send_email():
+  if request.method == 'GET':
+    recipient = request.args.get('recipient')
+    subject = request.args.get('subject')
+    body = request.args.get('body')
+
+    msg = Message(subject, recipients=[recipient])
+    msg.body = body
+    mail.send(msg)
+    flash('Email sent successfully!', 'success')
+    return jsonify({"success": True})
+
+
 @app.route('/update-dates', methods=['POST'])
 @login_required
 def update_dates():

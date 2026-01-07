@@ -2,5 +2,6 @@ flask
 pathlib
 Flask-Login
 Flask-WTF
+Flask-Mail
 gunicorn
 pandas
