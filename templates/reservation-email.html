@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demande de réservation</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f5f7fa; color: #333; line-height: 1.6;">
+  <div style="max-width: 600px; margin: 30px auto; padding: 30px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); border: 1px solid #eaeaea;">
+    <div style="text-align: center; margin-bottom: 25px;">
+      <h2 style="color: #4a5568; font-size: 1.8rem; margin: 0 0 10px; font-weight: 600;">Demande de réservation</h2>
+    </div>
+
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #f6ba00;">
+      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Période:</strong> {{ start_date }} au {{ end_date }}</p>
+      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Prix:</strong> {{ price }} €</p>
+      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Nombre de personnes:</strong> {{ people }}</p>
+      {% if to_customer == False %}
+      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Email:</strong> {{ email }}</p>
+      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Commentaire:</strong> {{ comment if comment else 'Aucun commentaire' }}</p>
+      {% endif %}
+    </div>
+
+    {% if to_customer == False %}
+    <p style="text-align: center; margin-top: 20px; font-size: 1.1em; color: #2d3748;">
+      Merci pour votre réservation !
+    </p>
+    {% endif %}
+  </div>
+</body>
+</html>

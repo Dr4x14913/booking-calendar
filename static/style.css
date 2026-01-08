@@ -554,6 +554,294 @@ body {
     font-size: 1.05em;
 }
 
+/* Success Page Styles */
+.success-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 40px;
+    background: var(--light-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.success-header {
+    margin-bottom: 30px;
+}
+
+.success-header h1 {
+    color: var(--secondary-color);
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.success-message {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--secondary-color);
+    text-align: left;
+    margin-bottom: 30px;
+}
+
+.success-message p {
+    color: var(--text-color);
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+.success-actions {
+    margin-top: 20px;
+}
+
+.success-button {
+    display: inline-block;
+    padding: 12px 25px;
+    background: var(--secondary-color);
+    color: var(--dark-color);
+    text-decoration: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.05em;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.success-button:hover {
+    background: #8bc34a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Error Page Styles */
+.error-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 40px;
+    background: var(--light-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.error-header {
+    margin-bottom: 30px;
+}
+
+.error-header h1 {
+    color: #dc3545;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.error-message {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+    text-align: left;
+    margin-bottom: 30px;
+}
+
+.error-message p {
+    color: var(--text-color);
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+.error-actions {
+    margin-top: 20px;
+}
+
+.back-button {
+    display: inline-block;
+    padding: 12px 25px;
+    background: var(--primary-color);
+    color: var(--dark-color);
+    text-decoration: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.05em;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.back-button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Reservation Form Styles */
+.reservation-container {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 30px;
+    background: var(--light-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.reservation-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.reservation-header h2 {
+    color: var(--medium-color);
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+.reservation-summary {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.reservation-summary p {
+    margin-bottom: 8px;
+    font-size: 1.05em;
+}
+
+.reservation-summary strong {
+    color: var(--medium-color);
+}
+
+.reservation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--medium-color);
+    font-size: 1.05em;
+}
+
+.form-group input[type="number"],
+.form-group input[type="email"],
+.form-group textarea {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    font-family: inherit;
+}
+
+.form-group input[type="number"],
+.form-group input[type="email"] {
+    height: 45px;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(246, 186, 0, 0.2);
+    background: var(--light-color);
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    justify-content: flex-end;
+}
+
+.submit-button {
+    padding: 12px 25px;
+    background: var(--primary-color);
+    color: var(--dark-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.05em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.submit-button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.cancel-button {
+    padding: 12px 25px;
+    background: #dc3545;
+    color: var(--light-color);
+    text-decoration: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.05em;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.cancel-button:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.reservation-button {
+    padding: 12px 25px;
+    background: var(--primary-color);
+    color: var(--dark-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.05em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.reservation-button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
 /* Admin Panel Navigation */
 .admin-nav {
     padding: 15px;

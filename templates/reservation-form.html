@@ -1,0 +1,86 @@
+<!-- reservation-form.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Réservation - {{ start_date }} au {{ end_date }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="reservation-container">
+        <div class="reservation-header">
+            <h2>Demande de Réservation</h2>
+        </div>
+
+        <div class="reservation-summary">
+            <p><strong>Période sélectionnée:</strong> {{ start_date }} au {{ end_date }}</p>
+            <p><strong>Prix total:</strong> {{ price }} €</p>
+        </div>
+
+        <form method="POST" action="/submit-reservation" class="reservation-form">
+            <input type="hidden" name="start_date" value="{{ start_date }}">
+            <input type="hidden" name="end_date" value="{{ end_date }}">
+            <input type="hidden" name="price" value="{{ price }}">
+
+            <div class="form-group">
+                <label for="people">Nombre de personnes (max 5):</label>
+                <input type="number" id="people" name="people" min="1" max="5" value="2" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="comment">Commentaire (optionnel):</label>
+                <textarea id="comment" name="comment" rows="4"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="submit-button">Confirmer la réservation</button>
+                <a href="/" class="cancel-button">Annuler</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Validate form before submission
+        const form = document.querySelector('.reservation-form');
+        let isSubmitting = false;
+
+        form.addEventListener('submit', function(e) {
+            const peopleInput = document.getElementById('people');
+            const emailInput = document.getElementById('email');
+
+            if (peopleInput.value < 1 || peopleInput.value > 5) {
+                alert('Veuillez sélectionner un nombre de personnes entre 1 et 5.');
+                e.preventDefault();
+                return;
+            }
+
+            if (!emailInput.value || !emailInput.value.includes('@')) {
+                alert('Veuillez entrer une adresse email valide.');
+                e.preventDefault();
+                return;
+            }
+
+            // Prevent multiple submissions
+            if (isSubmitting) {
+                e.preventDefault();
+                return;
+            }
+
+            isSubmitting = true;
+
+            // Disable submit button to prevent multiple clicks
+            const submitButton = form.querySelector('.submit-button');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Envoi en cours...';
+
+            // Show loading state
+            form.style.opacity = '0.8';
+        });
+    </script>
+</body>
+</html>

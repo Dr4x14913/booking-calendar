@@ -58,20 +58,6 @@ def load_user(user_id):
 #---------------------------------------------------------------------------------
 #-- Admin routes
 #---------------------------------------------------------------------------------
-@app.route('/send_email', methods=['POST'])
-def send_email():
-  if request.method == 'GET':
-    recipient = request.args.get('recipient')
-    subject = request.args.get('subject')
-    body = request.args.get('body')
-
-    msg = Message(subject, recipients=[recipient])
-    msg.body = body
-    mail.send(msg)
-    flash('Email sent successfully!', 'success')
-    return jsonify({"success": True})
-
-
 @app.route('/update-dates', methods=['POST'])
 @login_required
 def update_dates():
@@ -199,6 +185,66 @@ def serve_index():
       continue
     booked_dates_shown.append(i)
   return render_template('index.html', bookedDatesJson=booked_dates_shown)
+
+@app.route('/reservation-form')
+def reservation_form():
+    start_date = request.args.get('start_date', '')
+    end_date   = request.args.get('end_date', '')
+    duration   = (datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days
+    prices     = get_prices()
+    try:
+      price = int(prices.loc[prices["date"] == start_date][f"{duration} nigth"].iloc[0])
+    except IndexError:
+        price  = "Inconnu"
+    return render_template('reservation-form.html',
+                         start_date=start_date,
+                         end_date=end_date,
+                         price=price)
+
+@app.route('/submit-reservation', methods=['POST'])
+def submit_reservation():
+    start_date = request.form.get('start_date')
+    end_date   = request.form.get('end_date')
+    price      = request.form.get('price')
+    people     = request.form.get('people')
+    email      = request.form.get('email')
+    comment    = request.form.get('comment', '')
+
+    # Send confirmation email to customer
+    subject = f"Demande de réservation - {start_date} au {end_date}"
+    body = render_template('reservation-email.html',
+                       start_date=start_date,
+                       end_date=end_date,
+                       price=price,
+                       people=people,
+                       email=email,
+                       comment=comment,
+                       tp_customer=True,
+                    )
+
+    # Send confirmation email to owner
+    subject_owner = f"Demande de réservation - {start_date} au {end_date}"
+    body_owner = render_template('reservation-email.html',
+                       start_date=start_date,
+                       end_date=end_date,
+                       price=price,
+                       people=people,
+                       email=email,
+                       comment=comment,
+                       tp_customer=False,
+                    )
+    try:
+      msg = Message(subject, recipients=[email])
+      msg.html = body
+      mail.send(msg)
+
+      msg = Message(subject_owner, recipients=[os.environ.get('GMAIL_EMAIL')])
+      msg.html = body_owner
+      mail.send(msg)
+    except Exception as e:
+      return render_template('error.html', error=f'{e}', error_message=f'Rééssayez plus tard ou contactez directement {os.environ.get("GMAIL_EMAIL")}', error_title="Une erreur est survenue pendant la reservation")
+    else:
+      return render_template('reservation-success.html', message="Demande de réservation envoyé ! Vous allez recevoir prochainement un email de comfimation.")
 #---------------------------------------------------------------------------------
 #-- FUNCTIONS
 #---------------------------------------------------------------------------------
