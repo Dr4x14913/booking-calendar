@@ -252,6 +252,16 @@ def reservation_form():
     end_date   = request.args.get('end_date', '')
     phone      = request.args.get('phone', '')
     address    = request.args.get('address', '')
+    children_count = request.args.get('children_count', '')
+
+    # Collect children ages from query parameters
+    children_ages = {}
+    if children_count and int(children_count) > 0:
+        for i in range(int(children_count)):
+            age = request.args.get(f'child_age_{i}', '')
+            if age:
+                children_ages[i] = age
+
     duration   = (datetime.strptime(end_date, C_STANDARD_DATE_FMT) - datetime.strptime(start_date, C_STANDARD_DATE_FMT)).days
     prices     = get_prices()
     try:
@@ -268,6 +278,8 @@ def reservation_form():
                          phone=phone,
                          address=address,
                          email=email,
+                         children_count=children_count,
+                         children_ages=children_ages,
                          price=price)
 
 @app.route('/submit-reservation', methods=['POST'])
@@ -283,6 +295,16 @@ def submit_reservation():
     phone      = request.form.get('phone', '')
     address    = request.form.get('address', '')
     comment    = request.form.get('comment', '')
+    children_count = request.form.get('children_count', '')
+
+    # Collect children ages
+    children_ages = {}
+    if children_count and int(children_count) > 0:
+        for i in range(int(children_count)):
+            age = request.form.get(f'child_age_{i}', '')
+            if age:
+                children_ages[i] = age
+
 
     # Validate email format using email-validator
     try:
@@ -302,8 +324,11 @@ def submit_reservation():
                                phone=phone,
                                address=address,
                                email=email,
+                               children_count=children_count,
+                               **{f'child_age_{i}': age for i, age in children_ages.items()}
                         ))
 
+    duration = (datetime.strptime(end_date, C_PRETTY_DATE_FMT) - datetime.strptime(start_date, C_PRETTY_DATE_FMT)).days
     # Get website configuration for email template
     website_config = get_website_config()
 
@@ -315,8 +340,11 @@ def submit_reservation():
     body = render_template('reservation-email.html',
                        start_date=start_date,
                        end_date=end_date,
+                       duration=duration,
                        price=price,
                        people=people,
+                       children_count=children_count,
+                       children_ages=children_ages,
                        email=email,
                        firstname=firstname,
                        lastname=lastname,
@@ -333,8 +361,11 @@ def submit_reservation():
     body_owner = render_template('reservation-email.html',
                        start_date=start_date,
                        end_date=end_date,
+                       duration=duration,
                        price=price,
                        people=people,
+                       children_count=children_count,
+                       children_ages=children_ages,
                        email=email,
                        firstname=firstname,
                        lastname=lastname,

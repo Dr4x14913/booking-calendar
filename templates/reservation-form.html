@@ -72,6 +72,18 @@
             </div>
 
             <div class="form-group">
+                <label for="children_count">Nombre d'enfants (optionnel):</label>
+                <input type="number" id="children_count" name="children_count" min="0" max="10" value="{{ children_count }}">
+            </div>
+
+            <div class="form-group" id="children_ages_container" style="display: none;">
+                <label>Âges des enfants (optionnel):</label>
+                <div id="children_ages_fields">
+                    <!-- Child age fields will be added here dynamically -->
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label for="comment">Commentaire (optionnel):</label>
                 <textarea id="comment" name="comment" rows="4">{{ comment }}</textarea>
             </div>
@@ -101,6 +113,60 @@
                     flashModalOverlay.style.display = 'none';
                 }
             });
+        }
+
+        // Children age fields functionality
+        const childrenCountInput = document.getElementById('children_count');
+        const childrenAgesContainer = document.getElementById('children_ages_container');
+        const childrenAgesFields = document.getElementById('children_ages_fields');
+
+        // Show/hide children ages container based on children count
+        function updateChildrenAgesFields() {
+            const count = parseInt(childrenCountInput.value) || 0;
+            
+            if (count > 0) {
+                childrenAgesContainer.style.display = 'block';
+                
+                // Clear existing fields
+                childrenAgesFields.innerHTML = '';
+                
+                // Add fields for each child
+                for (let i = 0; i < count; i++) {
+                    const fieldDiv = document.createElement('div');
+                    fieldDiv.className = 'child-age-field';
+                    fieldDiv.style.marginBottom = '10px';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = `Âge de l'enfant ${i + 1}:`;
+                    label.style.display = 'block';
+                    label.style.marginBottom = '5px';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.name = `child_age_${i}`;
+                    input.min = '0';
+                    input.max = '18';
+                    input.style.width = '100%';
+                    input.style.padding = '8px';
+                    input.style.border = '1px solid #ddd';
+                    input.style.borderRadius = '4px';
+                    
+                    fieldDiv.appendChild(label);
+                    fieldDiv.appendChild(input);
+                    childrenAgesFields.appendChild(fieldDiv);
+                }
+            } else {
+                childrenAgesContainer.style.display = 'none';
+            }
+        }
+
+        // Initialize on page load
+        if (childrenCountInput) {
+            updateChildrenAgesFields();
+            
+            // Update when count changes
+            childrenCountInput.addEventListener('change', updateChildrenAgesFields);
+            childrenCountInput.addEventListener('input', updateChildrenAgesFields);
         }
 
         // Validate form before submission

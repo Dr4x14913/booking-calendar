@@ -20,19 +20,23 @@
     </div>
 
     <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; border-left: 4px solid #f6ba00;">
-      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Période:</strong> {{ start_date }} au {{ end_date }}</p>
+      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Période:</strong> {{ start_date }} au {{ end_date }} ({{ duration }} nuits)</p>
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Prix:</strong> {{ price }} €</p>
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Nombre de personnes:</strong> {{ people }}</p>
+      {% if children_count and children_count|int > 0 %}
+      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Nombre d'enfants:</strong> {{ children_count }}</p>
+      {% if children_ages %}
+        {% for i, age in children_ages.items() %}
+          <p style="margin: 8px 0; font-size: 1.05em; padding-left: 20px;">Âge de l'enfant {{ i|int + 1 }}: {{ age }} ans</p>
+        {% endfor %}
+      {% endif %}
+      {% endif %}
       {% if not to_customer %}
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Prénom</strong> {{ firstname }}</p>
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Nom</strong> {{ lastname }}</p>
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Email:</strong> {{ email }}</p>
-      {% if phone %}
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Téléphone:</strong> {{ phone }}</p>
-      {% endif %}
-      {% if address %}
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Adresse:</strong> {{ address }}</p>
-      {% endif %}
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Commentaire:</strong> {{ comment if comment else 'Aucun commentaire' }}</p>
       {% endif %}
     </div>
