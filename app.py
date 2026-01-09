@@ -103,6 +103,20 @@ def update_dates():
     set_booked_dates(new_dates)
     return redirect("/admin_dashboard")
 
+@app.route('/update-website-config', methods=['POST'])
+@login_required
+def update_website_config():
+    """Handle website configuration updates from admin panel"""
+    website_title = request.form.get("website_title", "")
+    icon_url = request.form.get("icon_url", "")
+
+    config = {
+        "website_title": website_title,
+        "icon_url": icon_url
+    }
+    set_website_config(config)
+    return redirect("/admin_dashboard")
+
 @app.route('/update-prices', methods=['POST'])
 @login_required
 def update_prices():
@@ -119,8 +133,8 @@ def update_prices():
 def admin():
     booked_dates = get_booked_dates()
     prices = get_prices().to_csv(sep=" ", index=False, header=None)
-
-    return render_template('admin_panel.html', bookedDatesJson=booked_dates, pricesCsv=prices)
+    website_config = get_website_config()
+    return render_template('admin_panel.html', bookedDatesJson=booked_dates, pricesCsv=prices, website_config=website_config)
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
@@ -236,6 +250,8 @@ def reservation_form():
     comment    = request.args.get('comment', '')
     start_date = request.args.get('start_date', '')
     end_date   = request.args.get('end_date', '')
+    phone      = request.args.get('phone', '')
+    address    = request.args.get('address', '')
     duration   = (datetime.strptime(end_date, C_STANDARD_DATE_FMT) - datetime.strptime(start_date, C_STANDARD_DATE_FMT)).days
     prices     = get_prices()
     try:
@@ -249,6 +265,8 @@ def reservation_form():
                          firstname=firstname,
                          lastname=lastname,
                          comment=comment,
+                         phone=phone,
+                         address=address,
                          email=email,
                          price=price)
 
@@ -262,6 +280,8 @@ def submit_reservation():
     firstname  = request.form.get('firstname')
     lastname   = request.form.get('lastname')
     email      = request.form.get('email')
+    phone      = request.form.get('phone', '')
+    address    = request.form.get('address', '')
     comment    = request.form.get('comment', '')
 
     # Validate email format using email-validator
@@ -279,11 +299,19 @@ def submit_reservation():
                                firstname=firstname,
                                lastname=lastname,
                                comment=comment,
+                               phone=phone,
+                               address=address,
                                email=email,
                         ))
 
+    # Get website configuration for email template
+    website_config = get_website_config()
+
     # Send confirmation email to customer
     subject = f"Demande de réservation - {start_date} au {end_date}"
+    website_title = website_config.get('website_title', '')
+    if website_title:
+        subject = f"[{website_title}] " + subject
     body = render_template('reservation-email.html',
                        start_date=start_date,
                        end_date=end_date,
@@ -292,8 +320,12 @@ def submit_reservation():
                        email=email,
                        firstname=firstname,
                        lastname=lastname,
+                       phone=phone,
+                       address=address,
                        comment=comment,
                        to_customer=True,
+                       website_title=website_title,
+                       icon_url=website_config.get('icon_url', ''),
                     )
 
     # Send confirmation email to owner
@@ -306,8 +338,12 @@ def submit_reservation():
                        email=email,
                        firstname=firstname,
                        lastname=lastname,
+                       phone=phone,
+                       address=address,
                        comment=comment,
                        to_customer=False,
+                       website_title=website_title,
+                       icon_url=website_config.get('icon_url', ''),
                     )
     try:
       msg = Message(subject, recipients=[email])
@@ -378,6 +414,23 @@ def get_hashed_password():
     with open(json_file, "r") as f:
         config = json.load(f)
         return config.get("hashed_password", "")
+
+def get_website_config():
+    """Retrieve website configuration from JSON file"""
+    json_file = "/app/website_config.json"
+    if not Path(json_file).exists():
+        # Create default config file if it doesn't exist
+        default_config = {"website_title": "", "icon_url": ""}
+        set_website_config(default_config)
+
+    with open(json_file, "r") as f:
+        return json.load(f)
+
+def set_website_config(config):
+    """Store website configuration in JSON file"""
+    json_file = "/app/website_config.json"
+    with open(json_file, "w") as f:
+        json.dump(config, f)
 
 def set_hashed_password(password):
     json_file = "/app/password_config.json"

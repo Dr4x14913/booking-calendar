@@ -933,6 +933,37 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
+/* Address Suggestions */
+.address-suggestions {
+    position: absolute;
+    background: var(--light-color);
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 15%;
+}
+
+.suggestion-item {
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95em;
+    color: var(--text-color);
+    border-bottom: 1px solid #eee;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background-color: var(--primary-color);
+    color: var(--dark-color);
+}
+
 /* Admin Panel Navigation */
 .admin-nav {
     padding: 15px;

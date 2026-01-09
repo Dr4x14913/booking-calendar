@@ -57,7 +57,18 @@
 
             <div class="form-group">
                 <label for="lastname">Nom</label>
-                <input type="text" name="lastname" value="{{ lastname }}"required>
+                <input type="text" name="lastname" value="{{ lastname }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Téléphone:</label>
+                <input type="tel" id="phone" name="phone" placeholder="Votre numéro de téléphone" value="{{ phone }}" pattern="[\+0-9+\s\-\(\)]{10,}" required>
+            </div>
+
+            <div class="form-group" style="position: relative;">
+                <label for="address">Adresse:</label>
+                <input type="text" id="address" name="address" placeholder="Commencez à taper votre adresse..." value="{{ address }}" required>
+                <div id="address-suggestions" class="address-suggestions"></div>
             </div>
 
             <div class="form-group">
@@ -72,6 +83,7 @@
         </form>
     </div>
 
+    <script src="/static/address-autocomplete.js"></script>
     <script>
         // Close flash modal functionality
         const closeFlashModal = document.getElementById('closeFlashModal');
