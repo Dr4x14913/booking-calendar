@@ -123,24 +123,27 @@
         // Show/hide children ages container based on children count
         function updateChildrenAgesFields() {
             const count = parseInt(childrenCountInput.value) || 0;
-            
+
             if (count > 0) {
                 childrenAgesContainer.style.display = 'block';
-                
+
                 // Clear existing fields
                 childrenAgesFields.innerHTML = '';
-                
+
                 // Add fields for each child
                 for (let i = 0; i < count; i++) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const paramValue = urlParams.get(`child_age_${i}`);
+
                     const fieldDiv = document.createElement('div');
                     fieldDiv.className = 'child-age-field';
                     fieldDiv.style.marginBottom = '10px';
-                    
+
                     const label = document.createElement('label');
                     label.textContent = `Âge de l'enfant ${i + 1}:`;
                     label.style.display = 'block';
                     label.style.marginBottom = '5px';
-                    
+
                     const input = document.createElement('input');
                     input.type = 'number';
                     input.name = `child_age_${i}`;
@@ -150,7 +153,9 @@
                     input.style.padding = '8px';
                     input.style.border = '1px solid #ddd';
                     input.style.borderRadius = '4px';
-                    
+                    if (paramValue !== null)
+                      input.value = paramValue;
+
                     fieldDiv.appendChild(label);
                     fieldDiv.appendChild(input);
                     childrenAgesFields.appendChild(fieldDiv);
@@ -163,7 +168,7 @@
         // Initialize on page load
         if (childrenCountInput) {
             updateChildrenAgesFields();
-            
+
             // Update when count changes
             childrenCountInput.addEventListener('change', updateChildrenAgesFields);
             childrenCountInput.addEventListener('input', updateChildrenAgesFields);
