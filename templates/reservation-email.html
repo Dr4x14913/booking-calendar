@@ -15,15 +15,17 @@
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Période:</strong> {{ start_date }} au {{ end_date }}</p>
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Prix:</strong> {{ price }} €</p>
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Nombre de personnes:</strong> {{ people }}</p>
-      {% if to_customer == False %}
+      {% if not to_customer %}
+      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Prénom</strong> {{ firstname }}</p>
+      <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Nom</strong> {{ lastname }}</p>
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Email:</strong> {{ email }}</p>
       <p style="margin: 8px 0; font-size: 1.05em;"><strong style="color: #4a5568;">Commentaire:</strong> {{ comment if comment else 'Aucun commentaire' }}</p>
       {% endif %}
     </div>
 
-    {% if to_customer == False %}
+    {% if to_customer %}
     <p style="text-align: center; margin-top: 20px; font-size: 1.1em; color: #2d3748;">
-      Merci pour votre réservation !
+    Merci {{ firstname }} pour votre réservation !
     </p>
     {% endif %}
   </div>

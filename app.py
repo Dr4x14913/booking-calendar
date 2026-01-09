@@ -1,31 +1,66 @@
 from flask import Flask, send_from_directory, render_template, flash, redirect, url_for, request, jsonify
-import json
-import os
-from pathlib import Path
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_mail import Mail, Message
+from flask_wtf import FlaskForm
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.security import check_password_hash, generate_password_hash
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo
-from flask_wtf import FlaskForm
+from pathlib import Path
+from datetime import datetime, timedelta
 import pandas as pd
 from io import StringIO
-from datetime import datetime, timedelta
+import locale
+import json
+import os
 import re
+
+#---------------------------------------------------------------------------------
+#-- MAIN APP
+#---------------------------------------------------------------------------------
+locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'fallback-super-secret'
 
-# Configuration for Flask-Mail
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = os.environ.get("GMAIL_EMAIL")
-app.config['MAIL_PASSWORD'] = os.environ.get("GOOGLE_APP_PASSWORD")
-app.config['MAIL_DEFAULT_SENDER'] = os.environ.get("GMAIL_EMAIL")
+C_SMTP_USERNAME = os.environ.get("SMTP_USERNAME")
+if C_SMTP_USERNAME is None:
+  raise Exception("Please set SMTP_USERNAME env var")
+C_SMTP_HOST = os.environ.get("SMTP_HOST")
+if C_SMTP_HOST is None:
+  raise Exception("Please set SMTP_HOST env var")
+C_SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
+if C_SMTP_PASSWORD is None:
+  raise Exception("Please set SMTP_PASSWORD env var")
+C_SMTP_PORT = os.environ.get("SMTP_PORT")
+if C_SMTP_PORT is None:
+  raise Exception("Please set SMTP_PORT env var")
+if os.environ.get("DEFAULT_SENDER") is not None:
+  C_DEFAULT_SENDER = os.environ.get("DEFAULT_SENDER")
+elif os.environ.get("DEFAULT_SENDER") is None and "@" not in C_SMTP_USERNAME:
+  raise Exception("Please set the DEFAULT_SENDER email address")
+else:
+  C_DEFAULT_SENDER = C_SMTP_USERNAME
 
-# Initialize Flask-Mail
+#---------------------------------------------------------------------------------
+#-- LIMITER
+#---------------------------------------------------------------------------------
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,  # Limits by client IP
+    default_limits=["200 per day", "50 per hour"]  # Default limits
+)
+#---------------------------------------------------------------------------------
+#-- Configuration for Flask-Mail
+#---------------------------------------------------------------------------------
+app.config['MAIL_SERVER']         = C_SMTP_HOST
+app.config['MAIL_PORT']           = C_SMTP_PORT
+app.config['MAIL_USE_TLS']        = os.environ.get("SMTP_TLS", True)
+app.config['MAIL_USE_SSL']        = os.environ.get("SMTP_SSL", False)
+app.config['MAIL_USERNAME']       = C_SMTP_USERNAME
+app.config['MAIL_PASSWORD']       = C_SMTP_PASSWORD
+app.config['MAIL_DEFAULT_SENDER'] = C_DEFAULT_SENDER
 mail = Mail(app)
 
 #---------------------------------------------------------------------------------
@@ -127,7 +162,7 @@ def admin_logout():
     return redirect(url_for('admin_login'))
 
 #---------------------------------------------------------------------------------
-#-- Routes
+#-- API Routes
 #--------------------------------------------------------------------------------
 @app.route('/api/get-allowed-start-dates', methods=['GET'])
 def get_allowed_start_dates():
@@ -176,6 +211,9 @@ def get_price():
 def get_booked_dates_api():
     return jsonify(get_booked_dates())
 
+#---------------------------------------------------------------------------------
+#-- Routes
+#--------------------------------------------------------------------------------
 @app.route('/')
 def serve_index():
   booked_dates_shown = []
@@ -197,16 +235,19 @@ def reservation_form():
     except IndexError:
         price  = "Inconnu"
     return render_template('reservation-form.html',
-                         start_date=start_date,
-                         end_date=end_date,
+                         start_date=datetime.strptime(start_date, "%Y-%m-%d").strftime("%A %d %h %Y"),
+                         end_date=datetime.strptime(end_date, "%Y-%m-%d").strftime("%A %d %h %Y"),
                          price=price)
 
 @app.route('/submit-reservation', methods=['POST'])
+@limiter.limit("1 per day")
 def submit_reservation():
     start_date = request.form.get('start_date')
     end_date   = request.form.get('end_date')
     price      = request.form.get('price')
     people     = request.form.get('people')
+    firstname  = request.form.get('firstname')
+    lastname   = request.form.get('lastname')
     email      = request.form.get('email')
     comment    = request.form.get('comment', '')
 
@@ -218,8 +259,10 @@ def submit_reservation():
                        price=price,
                        people=people,
                        email=email,
+                       firstname=firstname,
+                       lastname=lastname,
                        comment=comment,
-                       tp_customer=True,
+                       to_customer=True,
                     )
 
     # Send confirmation email to owner
@@ -230,15 +273,17 @@ def submit_reservation():
                        price=price,
                        people=people,
                        email=email,
+                       firstname=firstname,
+                       lastname=lastname,
                        comment=comment,
-                       tp_customer=False,
+                       to_customer=False,
                     )
     try:
       msg = Message(subject, recipients=[email])
       msg.html = body
       mail.send(msg)
 
-      msg = Message(subject_owner, recipients=[os.environ.get('GMAIL_EMAIL')])
+      msg = Message(subject_owner, recipients=[C_DEFAULT_SENDER])
       msg.html = body_owner
       mail.send(msg)
     except Exception as e:

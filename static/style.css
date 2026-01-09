@@ -738,8 +738,8 @@ body {
     font-size: 1.05em;
 }
 
-.form-group input[type="number"],
-.form-group input[type="email"],
+.form-group input,
+.form-group input,
 .form-group textarea {
     padding: 12px;
     border: 1px solid #ddd;
@@ -750,8 +750,8 @@ body {
     font-family: inherit;
 }
 
-.form-group input[type="number"],
-.form-group input[type="email"] {
+.form-group input,
+.form-group input {
     height: 45px;
 }
 

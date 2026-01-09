@@ -3,5 +3,6 @@ pathlib
 Flask-Login
 Flask-WTF
 Flask-Mail
+flask-limiter
 gunicorn
 pandas

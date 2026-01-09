@@ -33,12 +33,22 @@
             </div>
 
             <div class="form-group">
+                <label for="firstname">Prénom</label>
+                <input type="text" name="firstname" required>
+            </div>
+
+            <div class="form-group">
+                <label for="lastname">Nom</label>
+                <input type="text" name="lastname" required>
+            </div>
+
+            <div class="form-group">
                 <label for="comment">Commentaire (optionnel):</label>
                 <textarea id="comment" name="comment" rows="4"></textarea>
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="submit-button">Confirmer la réservation</button>
+                <button type="submit" class="submit-button">Confirmer la demande</button>
                 <a href="/" class="cancel-button">Annuler</a>
             </div>
         </form>
@@ -59,12 +69,6 @@
                 return;
             }
 
-            if (!emailInput.value || !emailInput.value.includes('@')) {
-                alert('Veuillez entrer une adresse email valide.');
-                e.preventDefault();
-                return;
-            }
-
             // Prevent multiple submissions
             if (isSubmitting) {
                 e.preventDefault();
@@ -79,7 +83,7 @@
             submitButton.textContent = 'Envoi en cours...';
 
             // Show loading state
-            form.style.opacity = '0.8';
+            form.style.opacity = '0.5';
         });
     </script>
 </body>
