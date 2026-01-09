@@ -7,7 +7,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="modal-overlay" id="flashModalOverlay">
+                <div class="modal" id="flashModal">
+                    <div class="modal-header">
+                        Information<span class="modal-close" id="closeFlashModal">&times;</span>
+                    </div>
+                    <div class="modal-content">
+                        {% for category, message in messages %}
+                            <div class="flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <div class="reservation-container">
+
         <div class="reservation-header">
             <h2>Demande de Réservation</h2>
         </div>
@@ -24,27 +42,27 @@
 
             <div class="form-group">
                 <label for="people">Nombre de personnes (max 5):</label>
-                <input type="number" id="people" name="people" min="1" max="5" value="2" required>
+                <input type="number" id="people" name="people" min="1" max="5" value="{{ people }}" required>
             </div>
 
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" value="{{ email }}" required>
             </div>
 
             <div class="form-group">
                 <label for="firstname">Prénom</label>
-                <input type="text" name="firstname" required>
+                <input type="text" name="firstname" value="{{ firstname }}" required>
             </div>
 
             <div class="form-group">
                 <label for="lastname">Nom</label>
-                <input type="text" name="lastname" required>
+                <input type="text" name="lastname" value="{{ lastname }}"required>
             </div>
 
             <div class="form-group">
                 <label for="comment">Commentaire (optionnel):</label>
-                <textarea id="comment" name="comment" rows="4"></textarea>
+                <textarea id="comment" name="comment" rows="4">{{ comment }}</textarea>
             </div>
 
             <div class="form-actions">
@@ -55,6 +73,24 @@
     </div>
 
     <script>
+        // Close flash modal functionality
+        const closeFlashModal = document.getElementById('closeFlashModal');
+        const flashModalOverlay = document.getElementById('flashModalOverlay');
+        const flashModal = document.getElementById('flashModal');
+
+        if (closeFlashModal && flashModalOverlay) {
+            closeFlashModal.addEventListener('click', function() {
+                flashModalOverlay.style.display = 'none';
+            });
+
+            // Also close when clicking outside the modal content
+            flashModalOverlay.addEventListener('click', function(e) {
+                if (e.target === flashModalOverlay) {
+                    flashModalOverlay.style.display = 'none';
+                }
+            });
+        }
+
         // Validate form before submission
         const form = document.querySelector('.reservation-form');
         let isSubmitting = false;

@@ -15,11 +15,14 @@ import locale
 import json
 import os
 import re
+from email_validator import validate_email, EmailNotValidError
 
 #---------------------------------------------------------------------------------
 #-- MAIN APP
 #---------------------------------------------------------------------------------
 locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
+C_STANDARD_DATE_FMT = "%Y-%m-%d"
+C_PRETTY_DATE_FMT   = "%A %d %b %Y"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'fallback-super-secret'
@@ -178,8 +181,8 @@ def get_forbidden_end_dates():
     prices            = get_prices()
     df                = prices.loc[prices["date"] == start_date]
     not_allowed       = [int(i.replace(' nigth', '')) for i in df.columns[df.eq(-1).any()]]
-    start_datetime    = datetime.strptime(start_date, "%Y-%m-%d")
-    not_allowed_dates = [(start_datetime + timedelta(days=i)).strftime("%Y-%m-%d") for i in not_allowed]
+    start_datetime    = datetime.strptime(start_date, C_STANDARD_DATE_FMT)
+    not_allowed_dates = [(start_datetime + timedelta(days=i)).strftime(C_STANDARD_DATE_FMT) for i in not_allowed]
     return jsonify(not_allowed_dates)
   except Exception as e:
     return jsonify({"error": f"{e}"}), 500
@@ -190,7 +193,7 @@ def get_price():
     args       = request.get_json()
     start_date = args["start_date"]
     end_date   = args["end_date"]
-    duration = (datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days
+    duration = (datetime.strptime(end_date, C_STANDARD_DATE_FMT) - datetime.strptime(start_date, C_STANDARD_DATE_FMT)).days
     prices = get_prices()
     try:
       price = int(prices.loc[prices["date"] == start_date][f"{duration} nigth"].iloc[0])
@@ -219,28 +222,38 @@ def serve_index():
   booked_dates_shown = []
   booked_dates = get_booked_dates()
   for i in booked_dates:
-    if not (datetime.strptime(i, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y-%m-%d") in booked_dates:
+    if not (datetime.strptime(i, C_STANDARD_DATE_FMT) + timedelta(days=1)).strftime(C_STANDARD_DATE_FMT) in booked_dates:
       continue
     booked_dates_shown.append(i)
   return render_template('index.html', bookedDatesJson=booked_dates_shown)
 
 @app.route('/reservation-form')
 def reservation_form():
+    email      = request.args.get('email', '')
+    people     = request.args.get('people', 2)
+    firstname  = request.args.get('firstname', '')
+    lastname   = request.args.get('lastname', '')
+    comment    = request.args.get('comment', '')
     start_date = request.args.get('start_date', '')
     end_date   = request.args.get('end_date', '')
-    duration   = (datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days
+    duration   = (datetime.strptime(end_date, C_STANDARD_DATE_FMT) - datetime.strptime(start_date, C_STANDARD_DATE_FMT)).days
     prices     = get_prices()
     try:
       price = int(prices.loc[prices["date"] == start_date][f"{duration} nigth"].iloc[0])
     except IndexError:
         price  = "Inconnu"
     return render_template('reservation-form.html',
-                         start_date=datetime.strptime(start_date, "%Y-%m-%d").strftime("%A %d %h %Y"),
-                         end_date=datetime.strptime(end_date, "%Y-%m-%d").strftime("%A %d %h %Y"),
+                         start_date=datetime.strptime(start_date, C_STANDARD_DATE_FMT).strftime(C_PRETTY_DATE_FMT),
+                         end_date=datetime.strptime(end_date, C_STANDARD_DATE_FMT).strftime(C_PRETTY_DATE_FMT),
+                         people=people,
+                         firstname=firstname,
+                         lastname=lastname,
+                         comment=comment,
+                         email=email,
                          price=price)
 
 @app.route('/submit-reservation', methods=['POST'])
-@limiter.limit("1 per day")
+@limiter.limit("10 per day")
 def submit_reservation():
     start_date = request.form.get('start_date')
     end_date   = request.form.get('end_date')
@@ -250,6 +263,24 @@ def submit_reservation():
     lastname   = request.form.get('lastname')
     email      = request.form.get('email')
     comment    = request.form.get('comment', '')
+
+    # Validate email format using email-validator
+    try:
+        emailinfo = validate_email(email, check_deliverability=True)
+        email     = emailinfo.normalized  # Use normalized email
+    except EmailNotValidError as e:
+        start_date = datetime.strptime(start_date, C_PRETTY_DATE_FMT).strftime(C_STANDARD_DATE_FMT),
+        end_date   = datetime.strptime(end_date, C_PRETTY_DATE_FMT).strftime(C_STANDARD_DATE_FMT),
+        flash('Veuillez entrer une adresse email valide.', 'error')
+        return redirect(url_for('reservation_form',
+                               start_date=start_date,
+                               end_date=end_date,
+                               people=people,
+                               firstname=firstname,
+                               lastname=lastname,
+                               comment=comment,
+                               email=email,
+                        ))
 
     # Send confirmation email to customer
     subject = f"Demande de réservation - {start_date} au {end_date}"
@@ -294,16 +325,16 @@ def submit_reservation():
 #-- FUNCTIONS
 #---------------------------------------------------------------------------------
 def get_allowed_start_dates():
-  prices_dates = [datetime.strptime(i, "%Y-%m-%d") for i in list(get_prices()['date'])]
-  booked_dates = [datetime.strptime(i, "%Y-%m-%d") for i in get_booked_dates()]
+  prices_dates = [datetime.strptime(i, C_STANDARD_DATE_FMT) for i in list(get_prices()['date'])]
+  booked_dates = [datetime.strptime(i, C_STANDARD_DATE_FMT) for i in get_booked_dates()]
   allowed = []
   for date in prices_dates:
     if date in booked_dates:
       if not date + timedelta(days=1) in booked_dates: # is the next day free
-        allowed.append(date.strftime("%Y-%m-%d"))
+        allowed.append(date.strftime(C_STANDARD_DATE_FMT))
         continue
       continue
-    allowed.append(date.strftime("%Y-%m-%d"))
+    allowed.append(date.strftime(C_STANDARD_DATE_FMT))
   return allowed
 
 def set_booked_dates(dates):

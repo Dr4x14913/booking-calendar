@@ -6,3 +6,4 @@ Flask-Mail
 flask-limiter
 gunicorn
 pandas
+email-validator
