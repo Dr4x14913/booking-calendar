@@ -1022,3 +1022,267 @@ body {
 .admin-nav a:last-child:hover {
     background: #c82333;
 }
+
+/* Price Editor Styles */
+.price-editor-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.price-editor-navigation {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.price-editor-dropdown {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    background: var(--light-color);
+    color: var(--text-color);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.price-editor-dropdown:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.price-editor-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(246, 186, 0, 0.2);
+}
+
+.price-editor-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.price-action-button {
+    padding: 10px 18px;
+    background: var(--primary-color);
+    color: var(--dark-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.price-action-button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.price-table-container {
+    overflow-x: auto;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: var(--light-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.price-editor-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+}
+
+.price-editor-table thead {
+    background: var(--medium-color);
+    color: var(--light-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.price-editor-table thead th {
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.price-editor-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.price-editor-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.price-editor-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.price-editor-table tbody tr:nth-child(even):hover {
+    background: #f0f0f0;
+}
+
+.price-editor-table tbody td {
+    padding: 8px;
+    text-align: center;
+}
+
+.price-date-input {
+    padding: 8px;
+    border: none;
+    background: #e8e8e8;
+    border-radius: 4px;
+    font-size: 0.9em;
+    text-align: center;
+    font-weight: 500;
+}
+
+.price-input {
+    width: 70px;
+    padding: 8px 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9em;
+    text-align: center;
+    transition: all 0.2s ease;
+    background: var(--light-color);
+}
+
+.price-input:hover {
+    border-color: var(--primary-color);
+}
+
+.price-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(246, 186, 0, 0.2);
+    background: var(--light-color);
+}
+
+.price-input[value="-1"] {
+    background: #ffebee;
+    color: #c62828;
+    font-weight: 600;
+}
+
+.duplicate-row-btn,
+.delete-row-btn {
+    padding: 5px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.2s ease;
+    margin: 0 2px;
+}
+
+.duplicate-row-btn {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.duplicate-row-btn:hover {
+    background: #bbdefb;
+    transform: scale(1.1);
+}
+
+.delete-row-btn {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.delete-row-btn:hover {
+    background: #ffcdd2;
+    transform: scale(1.1);
+}
+
+.price-editor-legend {
+    margin-top: 15px;
+    padding: 12px 15px;
+    background: #fff3e0;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+    font-size: 0.95em;
+    color: var(--text-color);
+}
+
+.price-editor-legend code {
+    background: #fce4ec;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    color: #c2185b;
+}
+
+/* Responsive Price Editor */
+@media (max-width: 768px) {
+    .price-editor-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .price-editor-navigation {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .price-editor-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .price-editor-table {
+        font-size: 0.85em;
+    }
+
+    .price-editor-table thead th {
+        padding: 10px 5px;
+        font-size: 0.8em;
+    }
+
+    .price-editor-table tbody td {
+        padding: 6px 3px;
+    }
+
+    .price-input {
+        width: 55px;
+        font-size: 0.85em;
+    }
+
+    .price-date-input {
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 480px) {
+    .price-editor-dropdown {
+        min-width: 100px;
+    }
+
+    .price-action-button {
+        font-size: 0.85em;
+        padding: 8px 12px;
+    }
+
+    .price-input {
+        width: 45px;
+        font-size: 0.8em;
+    }
+
+    .duplicate-row-btn,
+    .delete-row-btn {
+        padding: 4px 6px;
+        font-size: 0.9em;
+    }
+}

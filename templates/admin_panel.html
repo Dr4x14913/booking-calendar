@@ -49,15 +49,52 @@
           <form method="post" class="prices-form" action="/update-prices">
             <div class="calendar-section">
               <h3>Prices Management</h3>
-              <p class="settings-description">Set prices for each date. Format: DD/MM/YYYY followed by 7 space-separated prices (one for each day of the week). Example:</p>
-              <pre style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px; font-size: 0.9em;">
-28/11/2026	300 350 420 470 520 560 76
-29/11/2026	300 350 420 470 520 560 76
-30/11/2026	280 350 420 470 520 560 76</pre>
+              <p class="settings-description">Set prices for each date. Use the table below to edit prices for each duration (1-7 nights + additional night).</p>
 
-              <div class="calendar-input-group">
-                <label for="prices">Prices (format: DD/MM/YYYY followed by 7 space-separated prices):</label>
-                <textarea id="prices" name="prices" rows="15">{{ pricesCsv }}</textarea>
+              <!-- Price editor controls -->
+              <div class="price-editor-controls">
+                <div class="price-editor-navigation">
+                  <select id="price-month-select" class="price-editor-dropdown">
+                    <!-- Month options populated by JS -->
+                  </select>
+                  <select id="price-year-select" class="price-editor-dropdown">
+                    <!-- Year options populated by JS -->
+                  </select>
+                </div>
+                <div class="price-editor-actions">
+                  <button type="button" id="copy-previous-month" class="price-action-button">Copy from previous month</button>
+                  <button type="button" id="duplicate-row" class="price-action-button" style="display:none;">Duplicate this row</button>
+                </div>
+              </div>
+
+              <!-- Price table -->
+              <div class="price-table-container">
+                <table class="price-editor-table" id="price-editor-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>1 night</th>
+                      <th>2 nights</th>
+                      <th>3 nights</th>
+                      <th>4 nights</th>
+                      <th>5 nights</th>
+                      <th>6 nights</th>
+                      <th>7 nights</th>
+                      <th>Additional night</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="price-editor-body">
+                    <!-- Rows populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Hidden textarea for form submission -->
+              <textarea id="prices" name="prices" style="display:none;"></textarea>
+
+              <div class="price-editor-legend">
+                <strong>Legend:</strong> Enter <code>-1</code> to disable a duration option for a given date.
               </div>
             </div>
             <input type="submit" name="save_prices" value="Save Prices" class="calendar-button">
@@ -87,6 +124,7 @@
     </div>
 
     <script>
+      // Booked dates management
       function toggleClass(divobject, class_name) {
         if (divobject.classList.contains(class_name)) {
           divobject.classList.remove(class_name);
@@ -144,7 +182,307 @@
           textarea.value = currentDates.join(",");
         });
       });
+    </script>
 
+    <!-- Price Editor Script -->
+    <script>
+      // Price editor functionality
+      document.addEventListener("DOMContentLoaded", function() {
+        // Parse prices from CSV
+        const pricesCsv = {{ pricesCsv | tojson }};
+        let pricesData = [];
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+
+        // Parse CSV data into structured format
+        function parsePricesData(csvText) {
+          const lines = csvText.trim().split('\n');
+          const result = [];
+          const columnNames = ['date', '1 nigth', '2 nigth', '3 nigth', '4 nigth', '5 nigth', '6 nigth', '7 nigth', 'additional nigth'];
+          
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            // Split by whitespace or tab
+            const parts = line.split(/\s+/);
+            const date = parts[0] || '';
+            const rowData = {
+              date: date,
+              '1': parts[1] || '0',
+              '2': parts[2] || '0',
+              '3': parts[3] || '0',
+              '4': parts[4] || '0',
+              '5': parts[5] || '0',
+              '6': parts[6] || '0',
+              '7': parts[7] || '0',
+              'additional': parts[8] || '0'
+            };
+            result.push(rowData);
+          }
+          return result;
+        }
+
+        // Initialize prices data
+        if (pricesCsv && pricesCsv.trim()) {
+          pricesData = parsePricesData(pricesCsv);
+        }
+
+        // Get unique years from data
+        function getUniqueYears() {
+          const years = new Set();
+          pricesData.forEach(row => {
+            const match = row.date.match(/(\d{4})/);
+            if (match) years.add(parseInt(match[1]));
+          });
+          // Always include current year and surrounding years
+          for (let y = currentYear - 2; y <= currentYear + 5; y++) {
+            years.add(y);
+          }
+          return Array.from(years).sort((a, b) => a - b);
+        }
+
+        const monthNames = ["janvier", "février", "mars", "avril", "mai", "juin",
+                          "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+        
+        // Populate month and year dropdowns
+        const monthSelect = document.getElementById('price-month-select');
+        const yearSelect = document.getElementById('price-year-select');
+        
+        monthNames.forEach((name, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = name;
+          if (index === currentMonth) option.selected = true;
+          monthSelect.appendChild(option);
+        });
+
+        getUniqueYears().forEach(year => {
+          const option = document.createElement('option');
+          option.value = year;
+          option.textContent = year;
+          if (year === currentYear) option.selected = true;
+          yearSelect.appendChild(option);
+        });
+
+        // Render price table for selected month/year
+        function renderPriceTable() {
+          const tbody = document.getElementById('price-editor-body');
+          tbody.innerHTML = '';
+          
+          const selectedMonth = parseInt(monthSelect.value);
+          const selectedYear = parseInt(yearSelect.value);
+          
+          // Filter prices for selected month/year
+          const monthPrices = pricesData.filter(row => {
+            const dateObj = parseDate(row.date);
+            return dateObj && dateObj.getFullYear() === selectedYear && dateObj.getMonth() === selectedMonth;
+          });
+
+          // Sort by date
+          monthPrices.sort((a, b) => parseDate(a.date) - parseDate(b.date));
+
+          // If no data, create empty rows for all days in month
+          if (monthPrices.length === 0) {
+            const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+              const dateStr = formatDate(new Date(selectedYear, selectedMonth, day));
+              const emptyRow = {
+                date: dateStr,
+                '1': '0', '2': '0', '3': '0', '4': '0', '5': '0', '6': '0', '7': '0', 'additional': '0'
+              };
+              monthPrices.push(emptyRow);
+            }
+          }
+
+          // Render rows
+          monthPrices.forEach((row, rowIndex) => {
+            const tr = document.createElement('tr');
+            tr.dataset.date = row.date;
+            
+            tr.innerHTML = `
+              <td><input type="text" class="price-date-input" value="${row.date}" readonly></td>
+              <td><input type="number" class="price-input" data-col="1" value="${row['1']}" min="-1"></td>
+              <td><input type="number" class="price-input" data-col="2" value="${row['2']}" min="-1"></td>
+              <td><input type="number" class="price-input" data-col="3" value="${row['3']}" min="-1"></td>
+              <td><input type="number" class="price-input" data-col="4" value="${row['4']}" min="-1"></td>
+              <td><input type="number" class="price-input" data-col="5" value="${row['5']}" min="-1"></td>
+              <td><input type="number" class="price-input" data-col="6" value="${row['6']}" min="-1"></td>
+              <td><input type="number" class="price-input" data-col="7" value="${row['7']}" min="-1"></td>
+              <td><input type="number" class="price-input" data-col="additional" value="${row['additional']}" min="-1"></td>
+              <td>
+                <button type="button" class="duplicate-row-btn" title="Duplicate this row">⧉</button>
+                <button type="button" class="delete-row-btn" title="Delete this row">✕</button>
+              </td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          // Add event listeners
+          attachPriceTableListeners();
+        }
+
+        // Attach event listeners to price table
+        function attachPriceTableListeners() {
+          // Duplicate row
+          document.querySelectorAll('.duplicate-row-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+              const row = this.closest('tr');
+              const newRow = row.cloneNode(true);
+              row.after(newRow);
+              attachPriceTableListeners();
+              updatePricesData();
+            });
+          });
+
+          // Delete row
+          document.querySelectorAll('.delete-row-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+              const row = this.closest('tr');
+              row.remove();
+              updatePricesData();
+            });
+          });
+
+          // Update data on input change
+          document.querySelectorAll('.price-input').forEach(input => {
+            input.addEventListener('change', updatePricesData);
+          });
+        }
+
+        // Parse date from various formats
+        function parseDate(dateStr) {
+          if (!dateStr) return null;
+          // Try DD/MM/YYYY
+          const parts = dateStr.split('/');
+          if (parts.length === 3) {
+            return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+          }
+          // Try YYYY-MM-DD
+          parts.length = 0;
+          parts.push(...dateStr.split('-'));
+          if (parts.length === 3) {
+            return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+          }
+          return null;
+        }
+
+        // Format date to DD/MM/YYYY
+        function formatDate(date) {
+          const year = date.getFullYear();
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const day = date.getDate().toString().padStart(2, '0');
+          return `${day}/${month}/${year}`;
+        }
+
+        // Update pricesData from table inputs
+        function updatePricesData() {
+          const rows = document.querySelectorAll('#price-editor-body tr');
+          const newPricesData = [];
+          
+          rows.forEach(row => {
+            const date = row.querySelector('.price-date-input').value;
+            const rowData = { date: date };
+            
+            row.querySelectorAll('.price-input').forEach(input => {
+              const col = input.dataset.col;
+              rowData[col] = input.value;
+            });
+            
+            newPricesData.push(rowData);
+          });
+          
+          pricesData = newPricesData;
+        }
+
+        // Generate CSV from pricesData
+        function generatePricesCsv() {
+          const lines = [];
+          
+          pricesData.forEach(row => {
+            const line = `${row.date} ${row['1']} ${row['2']} ${row['3']} ${row['4']} ${row['5']} ${row['6']} ${row['7']} ${row['additional']}`;
+            lines.push(line);
+          });
+          
+          return lines.join('\n');
+        }
+
+        // Copy from previous month
+        document.getElementById('copy-previous-month').addEventListener('click', function() {
+          const currentMonth = parseInt(monthSelect.value);
+          const currentYear = parseInt(yearSelect.value);
+          
+          // Calculate previous month/year
+          let prevMonth = currentMonth - 1;
+          let prevYear = currentYear;
+          if (prevMonth < 0) {
+            prevMonth = 11;
+            prevYear--;
+          }
+          
+          // Get previous month data
+          const prevMonthPrices = pricesData.filter(row => {
+            const dateObj = parseDate(row.date);
+            return dateObj && dateObj.getFullYear() === prevYear && dateObj.getMonth() === prevMonth;
+          });
+          
+          if (prevMonthPrices.length === 0) {
+            alert('No data found in the previous month to copy.');
+            return;
+          }
+          
+          // Clear current month data
+          pricesData = pricesData.filter(row => {
+            const dateObj = parseDate(row.date);
+            return !(dateObj && dateObj.getFullYear() === currentYear && dateObj.getMonth() === currentMonth);
+          });
+          
+          // Copy and add new dates
+          const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+          const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
+          const daysDiff = daysInCurrentMonth - daysInPrevMonth;
+          
+          prevMonthPrices.forEach(row => {
+            const dateObj = parseDate(row.date);
+            const newDate = new Date(currentYear, currentMonth, dateObj.getDate());
+            if (newDate.getMonth() === currentMonth) { // Valid date in current month
+              const newRow = { ...row };
+              newRow.date = formatDate(newDate);
+              pricesData.push(newRow);
+            }
+          });
+          
+          // Add extra days if current month has more days
+          if (daysDiff > 0) {
+            for (let day = daysInPrevMonth + 1; day <= daysInCurrentMonth; day++) {
+              const newDate = new Date(currentYear, currentMonth, day);
+              const newRow = {
+                date: formatDate(newDate),
+                '1': '0', '2': '0', '3': '0', '4': '0', '5': '0', '6': '0', '7': '0', 'additional': '0'
+              };
+              pricesData.push(newRow);
+            }
+          }
+          
+          renderPriceTable();
+        });
+
+        // Dropdown change handlers
+        monthSelect.addEventListener('change', renderPriceTable);
+        yearSelect.addEventListener('change', renderPriceTable);
+
+        // Form submit handler
+        document.querySelector('.prices-form').addEventListener('submit', function() {
+          updatePricesData();
+          document.getElementById('prices').value = generatePricesCsv();
+        });
+
+        // Initial render
+        renderPriceTable();
+      });
+    </script>
+
+    <script>
       // JavaScript for calendar navigation without page reload
       document.addEventListener("DOMContentLoaded", function() {
         var bookedDates = {{ bookedDatesJson|safe }};
