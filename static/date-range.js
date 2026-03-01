@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", function() {
             dateElement.classList.add('end-date');
             updateRangeSelection();
             fetchPriceForRange();
+            showReservationButton();
             return;
         }
 
@@ -275,6 +276,24 @@ document.addEventListener("DOMContentLoaded", function() {
         // Hide price and selection info
         document.getElementById('priceDisplay').style.display = 'none';
         document.getElementById('selectionInfo').style.display = 'none';
+        hideReservationButton();
+    }
+
+    // Show reservation button when date range is selected
+    function showReservationButton() {
+        var reservationButton = document.getElementById('reservationButton');
+        if (reservationButton) {
+            reservationButton.href = '/reservation-form?start_date=' + startDate + '&end_date=' + endDate;
+            reservationButton.style.display = 'inline-block';
+        }
+    }
+
+    // Hide reservation button
+    function hideReservationButton() {
+        var reservationButton = document.getElementById('reservationButton');
+        if (reservationButton) {
+            reservationButton.style.display = 'none';
+        }
     }
 
     // Fetch price from backend for the selected date range
