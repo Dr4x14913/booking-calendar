@@ -122,10 +122,22 @@ def update_website_config():
 def update_prices():
     """Handle price updates from admin panel"""
     prices_data = request.form.get("prices")
+    selected_month = request.form.get("selected_month")
+    selected_year = request.form.get("selected_year")
+    
     if prices_data:
+      # Read existing prices
+      existing_df = get_prices()
+      
+      # Parse new prices from form
       cols = ['date', '1 nigth', '2 nigth', '3 nigth', '4 nigth', '5 nigth', '6 nigth', '7 nigth', 'additional nigth']
-      df = pd.read_csv(StringIO(prices_data) , sep=r'\s+', names=cols, header=None)
-    set_prices(df)
+      new_df = pd.read_csv(StringIO(prices_data), sep=r'\s+', names=cols, header=None)
+      
+      # If month/year provided, only update that month
+      if selected_month and selected_year:
+        new_df = merge_price_data(existing_df, new_df, int(selected_month), int(selected_year))
+
+      set_prices(new_df)
     return redirect("/admin_dashboard")
 
 @app.route('/admin_dashboard')
@@ -523,6 +535,32 @@ def set_website_config(config):
     json_file = "/app/website_config.json"
     with open(json_file, "w") as f:
         json.dump(config, f)
+
+def merge_price_data(existing_df, new_df, month, year):
+    """Merge new price data for specific month/year into existing data"""
+    if existing_df.empty:
+        return new_df
+    
+    # Convert date column to datetime for comparison
+    existing_df['date_parsed'] = pd.to_datetime(existing_df['date'], format='%Y-%m-%d', errors='coerce')
+    new_df['date_parsed'] = pd.to_datetime(new_df['date'], format='%Y-%m-%d', errors='coerce')
+    
+    # Filter out existing rows for the target month/year
+    mask = ~((existing_df['date_parsed'].dt.month == month) & (existing_df['date_parsed'].dt.year == year))
+    existing_filtered = existing_df[mask]
+    
+    # Drop the temporary parsed column
+    existing_filtered = existing_filtered.drop('date_parsed', axis=1)
+    new_df = new_df.drop('date_parsed', axis=1)
+    
+    # Combine existing and new data
+    merged_df = pd.concat([existing_filtered, new_df], ignore_index=True)
+    
+    # Sort by date
+    merged_df['date_parsed'] = pd.to_datetime(merged_df['date'], format='%Y-%m-%d', errors='coerce')
+    merged_df = merged_df.sort_values('date_parsed').drop('date_parsed', axis=1)
+    
+    return merged_df
 
 def set_hashed_password(password):
     json_file = "/app/password_config.json"
