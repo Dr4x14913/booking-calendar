@@ -182,7 +182,7 @@ def admin_logout():
 #-- API Routes
 #--------------------------------------------------------------------------------
 @app.route('/api/get-allowed-start-dates', methods=['GET'])
-def get_allowed_start_dates():
+def get_allowed_start_dates_():
   allowed = get_allowed_start_dates()
   return jsonify(allowed)
 
@@ -209,15 +209,76 @@ def get_price():
     end_date   = args["end_date"]
     duration = (datetime.strptime(end_date, C_STANDARD_DATE_FMT) - datetime.strptime(start_date, C_STANDARD_DATE_FMT)).days
     prices = get_prices()
-    try:
-      price = int(prices.loc[prices["date"] == start_date][f"{duration} nigth"].iloc[0])
-    except IndexError:
+    
+    def get_price_for_duration(start_d, dur):
+      """Get price for a given start date and duration"""
+      try:
+        return int(prices.loc[prices["date"] == start_d][f"{dur} nigth"].iloc[0])
+      except (IndexError, KeyError):
+        return None
+    
+    def get_additional_nigth_price(start_d):
+      """Get unitary price for additional night"""
+      try:
+        return int(prices.loc[prices["date"] == start_d]["additional nigth"].iloc[0])
+      except (IndexError, KeyError):
+        return None
+    
+    def calculate_total_price(start_d, dur):
+      """Calculate total price for duration, handling > 7 nights"""
+      if dur <= 7:
+        # Direct lookup for <= 7 nights
+        price = get_price_for_duration(start_d, dur)
+        if price is None or price == -1:
+          return None
+        return price
+      
+      # For > 7 nights, calculate using 7-night blocks + remainder
+      num_7night_blocks = dur // 7
+      remaining_days = dur % 7
+      
+      total = 0
+      current_date = datetime.strptime(start_d, C_STANDARD_DATE_FMT)
+      
+      # Process 7-night blocks
+      for i in range(num_7night_blocks):
+        block_start = current_date + timedelta(days=i * 7)
+        block_start_str = block_start.strftime(C_STANDARD_DATE_FMT)
+        price = get_price_for_duration(block_start_str, 7)
+        if price is None or price == -1:
+          # Fallback to additional night pricing
+          unit_price = get_additional_nigth_price(start_d)
+          if unit_price is None:
+            return None
+          total += 7 * unit_price
+        else:
+          total += price
+      
+      # Process remaining days
+      if remaining_days > 0:
+        remainder_start = current_date + timedelta(days=num_7night_blocks * 7)
+        remainder_start_str = remainder_start.strftime(C_STANDARD_DATE_FMT)
+        price = get_price_for_duration(remainder_start_str, remaining_days)
+        if price is None or price == -1:
+          # Fallback to additional night pricing
+          unit_price = get_additional_nigth_price(start_d)
+          if unit_price is None:
+            return None
+          total += remaining_days * unit_price
+        else:
+          total += price
+      
+      return total
+    
+    total_price = calculate_total_price(start_date, duration)
+    
+    if total_price is None:
       return jsonify({
         "success": True, "total_price": "?", "details": "Les dates selectionées ne sont pas standard, veilliez contacter le propriétaie."}
       )
     else:
       return jsonify({
-        "success": True, "total_price": price, "details": ""}
+        "success": True, "total_price": total_price, "details": ""}
       )
   except Exception as e:
     return jsonify({
