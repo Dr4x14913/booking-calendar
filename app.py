@@ -52,7 +52,8 @@ else:
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,  # Limits by client IP
-    default_limits=["200 per day", "50 per hour"]  # Default limits
+    default_limits=["200 per day", "50 per hour"],  # Default limits
+    storage_uri="memory://",
 )
 #---------------------------------------------------------------------------------
 #-- Configuration for Flask-Mail
