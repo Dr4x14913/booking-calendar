@@ -21,6 +21,13 @@ body {
     background-color: #f8f9fa;
     color: var(--text-color);
     line-height: 1.6;
+    padding: 20px;
+}
+
+/* Page container with max width */
+.calendar-settings-content {
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 /* Calendar Container */
@@ -466,7 +473,10 @@ body {
     margin-top: 20px;
 }
 
-.settings-calendar-section {
+/* Legacy settings section styles - replaced by collapsible-section */
+.settings-calendar-section:not(.collapsible-section),
+.settings-prices-section:not(.collapsible-section),
+.settings-website-section:not(.collapsible-section) {
     background: var(--light-color);
     border-radius: 12px;
     padding: 20px;
@@ -530,6 +540,7 @@ body {
 
 .calendar-button {
     padding: 12px 25px;
+    margin: 15px 0 0 0;
     background: var(--primary-color);
     color: var(--dark-color);
     border: none;
@@ -561,6 +572,81 @@ body {
     border-bottom: 3px solid var(--primary-color);
     padding-bottom: 8px;
     font-size: 1.3em;
+}
+
+.calendar-section h3.section-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #ffe066 100%);
+    color: var(--dark-color);
+    padding: 12px 18px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1.4em;
+    font-weight: 700;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(246, 186, 0, 0.3);
+}
+
+/* Collapsible sections */
+.collapsible-section {
+    background: var(--light-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.section-header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.collapse-btn {
+    background: transparent;
+    border: 2px solid var(--medium-color);
+    color: var(--medium-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.collapse-btn:hover {
+    background: var(--medium-color);
+    color: var(--light-color);
+}
+
+.section-content {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.section-content.collapsed {
+    display: none;
+}
+
+/* Subsection styling */
+.subsection {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 25px;
+}
+
+.subsection-header {
+    font-size: 1.1em;
+    color: var(--medium-color);
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #ddd;
 }
 
 .calendar-section p {
