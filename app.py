@@ -478,12 +478,12 @@ def get_allowed_start_dates():
   return allowed
 
 def set_booked_dates(dates):
-    json_file = "/app/booked_dates.json"
+    json_file = "/app_data/booked_dates.json"
     with open(json_file, "w") as f:
         json.dump(dates, f)
 
 def get_booked_dates():
-    json_file = "/app/booked_dates.json"
+    json_file = "/app_data/booked_dates.json"
     if not Path(json_file).exists():
         with open(json_file, "w") as f:
             json.dump([], f)
@@ -493,7 +493,7 @@ def get_booked_dates():
 
 def set_prices(price_data):
     """Store price data in JSON file"""
-    csv_file = "/app/prices.csv"
+    csv_file = "/app_data/prices.csv"
     price_data["date"] = price_data['date'].str.replace("/","-")
     price_data["date"] = price_data['date'].apply(lambda x: re.sub(r"(\d{2})-(\d{2})-(\d{4})", r"\3-\2-\1",x))
     price_data.sort_values("date", inplace=True)
@@ -501,40 +501,60 @@ def set_prices(price_data):
 
 def get_prices():
     """Retrieve price data from JSON file"""
-    csv_file = "/app/prices.csv"
+    csv_file = "/app_data/prices.csv"
     if not Path(csv_file).exists():
       return pd.DataFrame()
 
     prices = pd.read_csv(csv_file, sep=';')
     return prices
 
-def get_hashed_password():
-    json_file = "/app/password_config.json"
-    if not Path(json_file).exists():
-        # Create default password file if it doesn't exist
-        default_password = os.environ.get('DEFAULT_PASSWORD', 'toto')
-        set_hashed_password(default_password)
-
-    with open(json_file, "r") as f:
-        config = json.load(f)
-        return config.get("hashed_password", "")
-
-def get_website_config():
-    """Retrieve website configuration from JSON file"""
-    json_file = "/app/website_config.json"
+def get_config():
+    """Retrieve merged configuration from JSON file"""
+    json_file = "/app_data/config.json"
     if not Path(json_file).exists():
         # Create default config file if it doesn't exist
-        default_config = {"website_title": "", "icon_url": ""}
-        set_website_config(default_config)
-
+        default_password = os.environ.get('DEFAULT_PASSWORD', 'toto')
+        default_config = {
+            "hashed_password": generate_password_hash(default_password),
+            "website_title": "",
+            "icon_url": ""
+        }
+        set_config(default_config)
+    
     with open(json_file, "r") as f:
         return json.load(f)
 
-def set_website_config(config):
-    """Store website configuration in JSON file"""
-    json_file = "/app/website_config.json"
+def set_config(config):
+    """Store merged configuration in JSON file"""
+    json_file = "/app_data/config.json"
     with open(json_file, "w") as f:
         json.dump(config, f)
+
+def get_hashed_password():
+    """Retrieve hashed password from merged config"""
+    config = get_config()
+    return config.get("hashed_password", "")
+
+def set_hashed_password(password):
+    """Store hashed password in merged config"""
+    config = get_config()
+    config["hashed_password"] = generate_password_hash(password)
+    set_config(config)
+
+def get_website_config():
+    """Retrieve website configuration from merged config"""
+    config = get_config()
+    return {
+        "website_title": config.get("website_title", ""),
+        "icon_url": config.get("icon_url", "")
+    }
+
+def set_website_config(config):
+    """Store website configuration in merged config"""
+    merged_config = get_config()
+    merged_config["website_title"] = config.get("website_title", "")
+    merged_config["icon_url"] = config.get("icon_url", "")
+    set_config(merged_config)
 
 def merge_price_data(existing_df, new_df, month, year):
     """Merge new price data for specific month/year into existing data"""
@@ -562,12 +582,6 @@ def merge_price_data(existing_df, new_df, month, year):
     
     return merged_df
 
-def set_hashed_password(password):
-    json_file = "/app/password_config.json"
-    hashed_password = generate_password_hash(password)
-    config = {"hashed_password": hashed_password}
-    with open(json_file, "w") as f:
-        json.dump(config, f)
 #---------------------------------------------------------------------------------
 #-- MAIN
 #---------------------------------------------------------------------------------

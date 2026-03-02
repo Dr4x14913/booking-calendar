@@ -4,6 +4,10 @@ services:
     build: .
     ports:
       - "5000:5000"
-#    volumes:
-#      - $PWD:/app
+    volumes:
+      # - $PWD:/app
+      - app_data:/app_data
+
+volumes:
+  app_data:
 
