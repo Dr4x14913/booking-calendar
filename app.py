@@ -214,76 +214,12 @@ def get_forbidden_end_dates():
     return jsonify({"error": f"{e}"}), 500
 
 @app.route('/api/get-price', methods=['POST'])
-def get_price():
+def get_price_route():
   try:
     args       = request.get_json()
     start_date = args["start_date"]
     end_date   = args["end_date"]
-    duration = (datetime.strptime(end_date, C_STANDARD_DATE_FMT) - datetime.strptime(start_date, C_STANDARD_DATE_FMT)).days
-    prices = get_prices()
-    
-    def get_price_for_duration(start_d, dur):
-      """Get price for a given start date and duration"""
-      try:
-        return int(prices.loc[prices["date"] == start_d][f"{dur} nigth"].iloc[0])
-      except (IndexError, KeyError):
-        return None
-    
-    def get_additional_nigth_price(start_d):
-      """Get unitary price for additional night"""
-      try:
-        return int(prices.loc[prices["date"] == start_d]["additional nigth"].iloc[0])
-      except (IndexError, KeyError):
-        return None
-    
-    def calculate_total_price(start_d, dur):
-      """Calculate total price for duration, handling > 7 nights"""
-      if dur <= 7:
-        # Direct lookup for <= 7 nights
-        price = get_price_for_duration(start_d, dur)
-        if price is None or price == -1:
-          return None
-        return price
-      
-      # For > 7 nights, calculate using 7-night blocks + remainder
-      num_7night_blocks = dur // 7
-      remaining_days = dur % 7
-      
-      total = 0
-      current_date = datetime.strptime(start_d, C_STANDARD_DATE_FMT)
-      
-      # Process 7-night blocks
-      for i in range(num_7night_blocks):
-        block_start = current_date + timedelta(days=i * 7)
-        block_start_str = block_start.strftime(C_STANDARD_DATE_FMT)
-        price = get_price_for_duration(block_start_str, 7)
-        if price is None or price == -1:
-          # Fallback to additional night pricing
-          unit_price = get_additional_nigth_price(start_d)
-          if unit_price is None:
-            return None
-          total += 7 * unit_price
-        else:
-          total += price
-      
-      # Process remaining days
-      if remaining_days > 0:
-        remainder_start = current_date + timedelta(days=num_7night_blocks * 7)
-        remainder_start_str = remainder_start.strftime(C_STANDARD_DATE_FMT)
-        price = get_price_for_duration(remainder_start_str, remaining_days)
-        if price is None or price == -1:
-          # Fallback to additional night pricing
-          unit_price = get_additional_nigth_price(start_d)
-          if unit_price is None:
-            return None
-          total += remaining_days * unit_price
-        else:
-          total += price
-      
-      return total
-    
-    total_price = calculate_total_price(start_date, duration)
-    
+    total_price = get_price(start_date, end_date)
     if total_price is None:
       return jsonify({
         "success": True, "total_price": "?", "details": "Les dates selectionées ne sont pas standard, veilliez contacter le propriétaie."}
@@ -294,7 +230,7 @@ def get_price():
       )
   except Exception as e:
     return jsonify({
-      "success": False, "total_price": "Unknown", "details": "Fail to process data"}
+        "success": False, "total_price": "?", "details": f"Fail to process data: {e}"}
     ), 500
 
 @app.route('/api/get-booked-dates', methods=['GET'])
@@ -335,12 +271,10 @@ def reservation_form():
             if age:
                 children_ages[i] = age
 
-    duration   = (datetime.strptime(end_date, C_STANDARD_DATE_FMT) - datetime.strptime(start_date, C_STANDARD_DATE_FMT)).days
-    prices     = get_prices()
     try:
-      price = int(prices.loc[prices["date"] == start_date][f"{duration} nigth"].iloc[0])
+      price = get_price(start_date, end_date) or "?"
     except IndexError:
-        price  = "Inconnu"
+        price  = "?"
     return render_template('reservation-form.html',
                          start_date=datetime.strptime(start_date, C_STANDARD_DATE_FMT).strftime(C_PRETTY_DATE_FMT),
                          end_date=datetime.strptime(end_date, C_STANDARD_DATE_FMT).strftime(C_PRETTY_DATE_FMT),
@@ -464,6 +398,73 @@ def submit_reservation():
 #---------------------------------------------------------------------------------
 #-- FUNCTIONS
 #---------------------------------------------------------------------------------
+def get_price(start_date, end_date):
+    duration = (datetime.strptime(end_date, C_STANDARD_DATE_FMT) - datetime.strptime(start_date, C_STANDARD_DATE_FMT)).days
+    prices = get_prices()
+    
+    def get_price_for_duration(start_d, dur):
+      """Get price for a given start date and duration"""
+      try:
+        return int(prices.loc[prices["date"] == start_d][f"{dur} nigth"].iloc[0])
+      except (IndexError, KeyError):
+        return None
+    
+    def get_additional_nigth_price(start_d):
+      """Get unitary price for additional night"""
+      try:
+        return int(prices.loc[prices["date"] == start_d]["additional nigth"].iloc[0])
+      except (IndexError, KeyError):
+        return None
+    
+    def calculate_total_price(start_d, dur):
+      """Calculate total price for duration, handling > 7 nights"""
+      if dur <= 7:
+        # Direct lookup for <= 7 nights
+        price = get_price_for_duration(start_d, dur)
+        if price is None or price == -1:
+          return None
+        return price
+      
+      # For > 7 nights, calculate using 7-night blocks + remainder
+      num_7night_blocks = dur // 7
+      remaining_days = dur % 7
+      
+      total = 0
+      current_date = datetime.strptime(start_d, C_STANDARD_DATE_FMT)
+      
+      # Process 7-night blocks
+      for i in range(num_7night_blocks):
+        block_start = current_date + timedelta(days=i * 7)
+        block_start_str = block_start.strftime(C_STANDARD_DATE_FMT)
+        price = get_price_for_duration(block_start_str, 7)
+        if price is None or price == -1:
+          # Fallback to additional night pricing
+          unit_price = get_additional_nigth_price(start_d)
+          if unit_price is None:
+            return None
+          total += 7 * unit_price
+        else:
+          total += price
+      
+      # Process remaining days
+      if remaining_days > 0:
+        remainder_start = current_date + timedelta(days=num_7night_blocks * 7)
+        remainder_start_str = remainder_start.strftime(C_STANDARD_DATE_FMT)
+        price = get_price_for_duration(remainder_start_str, remaining_days)
+        if price is None or price == -1:
+          # Fallback to additional night pricing
+          unit_price = get_additional_nigth_price(start_d)
+          if unit_price is None:
+            return None
+          total += remaining_days * unit_price
+        else:
+          total += price
+      
+      return total
+    
+    total_price = calculate_total_price(start_date, duration)
+    return total_price
+    
 def get_allowed_start_dates():
   prices_dates = [datetime.strptime(i, C_STANDARD_DATE_FMT) for i in list(get_prices()['date'])]
   booked_dates = [datetime.strptime(i, C_STANDARD_DATE_FMT) for i in get_booked_dates()]
@@ -562,8 +563,8 @@ def merge_price_data(existing_df, new_df, month, year):
         return new_df
     
     # Convert date column to datetime for comparison
-    existing_df['date_parsed'] = pd.to_datetime(existing_df['date'], format='%Y-%m-%d', errors='coerce')
-    new_df['date_parsed'] = pd.to_datetime(new_df['date'], format='%Y-%m-%d', errors='coerce')
+    existing_df['date_parsed'] = pd.to_datetime(existing_df['date'], format=C_STANDARD_DATE_FMT, errors='coerce')
+    new_df['date_parsed'] = pd.to_datetime(new_df['date'], format=C_STANDARD_DATE_FMT, errors='coerce')
     
     # Filter out existing rows for the target month/year
     mask = ~((existing_df['date_parsed'].dt.month == month) & (existing_df['date_parsed'].dt.year == year))
@@ -577,7 +578,7 @@ def merge_price_data(existing_df, new_df, month, year):
     merged_df = pd.concat([existing_filtered, new_df], ignore_index=True)
     
     # Sort by date
-    merged_df['date_parsed'] = pd.to_datetime(merged_df['date'], format='%Y-%m-%d', errors='coerce')
+    merged_df['date_parsed'] = pd.to_datetime(merged_df['date'], format=C_STANDARD_DATE_FMT, errors='coerce')
     merged_df = merged_df.sort_values('date_parsed').drop('date_parsed', axis=1)
     
     return merged_df
