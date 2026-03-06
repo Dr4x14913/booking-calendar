@@ -32,6 +32,7 @@ SMTP_TLS=true
 SMTP_PASSWORD=your_app_password
 DEFAULT_SENDER=admin@email.com
 SECRET_KEY=your-secret-key
+PORT=5555
 ```
 
 ### Run with Docker
@@ -40,7 +41,7 @@ SECRET_KEY=your-secret-key
 docker-compose up --build
 ```
 
-Access the app at `http://localhost:5000`
+Access the app at `http://localhost:${PORT}` (default: 5555)
 
 ## Default Admin Credentials
 

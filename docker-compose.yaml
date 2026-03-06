@@ -3,7 +3,7 @@ services:
     env_file: stack.env
     build: .
     ports:
-      - "5000:5000"
+      - "${PORT:-5555}:5000"
     volumes:
       # - $PWD:/app
       - app_data:/app_data
