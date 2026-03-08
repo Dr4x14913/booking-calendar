@@ -397,7 +397,7 @@ def submit_reservation():
     except Exception as e:
       return render_template('error.html', error=f'{e}', error_message=f'Rééssayez plus tard ou contactez directement {os.environ.get("GMAIL_EMAIL")}', error_title="Une erreur est survenue pendant la reservation")
     else:
-      return render_template('reservation-success.html', message="Demande de réservation envoyé ! Vous allez recevoir prochainement un email de comfimation.")
+      return render_template('reservation-success.html', message="Demande de réservation envoyé !")
 #---------------------------------------------------------------------------------
 #-- FUNCTIONS
 #---------------------------------------------------------------------------------
