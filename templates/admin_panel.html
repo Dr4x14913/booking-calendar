@@ -555,8 +555,8 @@
         yearSelect.addEventListener('change', function() {
           document.getElementById('selected_year').value = this.value;
         });
-        // Initialize hidden fields
-        document.getElementById('selected_month').value = currentMonth;
+        // Initialize hidden fields (months are 1-based in backend)
+        document.getElementById('selected_month').value = currentMonth + 1;
         document.getElementById('selected_year').value = currentYear;
 
         // Form submit handler

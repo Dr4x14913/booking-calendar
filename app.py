@@ -134,11 +134,13 @@ def update_prices():
       cols = ['date', '1 nigth', '2 nigth', '3 nigth', '4 nigth', '5 nigth', '6 nigth', '7 nigth', 'additional nigth']
       new_df = pd.read_csv(StringIO(prices_data), sep=r'\s+', names=cols, header=None)
       
-      # If month/year provided, only update that month
+      # Always merge new data with existing data
       if selected_month and selected_year:
-        new_df = merge_price_data(existing_df, new_df, int(selected_month), int(selected_year))
-
-      set_prices(new_df)
+        merged_df = merge_price_data(existing_df, new_df, int(selected_month), int(selected_year))
+        set_prices(merged_df)
+      else:
+        # Fallback: use new_df as-is if no month/year specified
+        set_prices(new_df)
     return redirect("/admin_dashboard")
 
 @app.route('/admin_dashboard')
