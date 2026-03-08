@@ -303,9 +303,6 @@
             return dateObj && dateObj.getFullYear() === selectedYear && dateObj.getMonth() === selectedMonth;
           });
 
-          // Sort by date
-          monthPrices.sort((a, b) => parseDate(a.date) - parseDate(b.date));
-
           // If no data, create empty rows for all days in month (default to -1)
           if (monthPrices.length === 0) {
             const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
@@ -332,6 +329,9 @@
               monthPrices.push(emptyRow);
             }
           }
+
+          // Sort by date (after filling missing days)
+          monthPrices.sort((a, b) => parseDate(a.date) - parseDate(b.date));
 
           // Render rows
           monthPrices.forEach((row, rowIndex) => {
