@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function() {
     var isSelectingRange = false;
     var allowedStartDates = [];
     var forbiddenEndDates = [];
+    var bookedDatesAfterStart = [];
+    var bookedDatesFetched = false;
 
     // Handle date click for range selection
     function handleDateClick(e) {
@@ -29,6 +31,11 @@ document.addEventListener("DOMContentLoaded", function() {
         if (startDate && !endDate) {
             // Don't allow selecting a date before the start date
             if (dateObj < new Date(startDate)) {
+                return;
+            }
+            // Don't allow selecting a booked date or dates after the first booked date
+            var bookedDay = document.querySelector('.calendar-day[date="' + dateStr + '"].booked');
+            if (bookedDay) {
                 return;
             }
             endDate = dateStr;
@@ -203,6 +210,7 @@ document.addEventListener("DOMContentLoaded", function() {
         fetch('/api/get-booked-dates')
             .then(response => response.json())
             .then(bookedDates => {
+                bookedDatesFetched = true;
                 var startObj = new Date(startDate);
 
                 // Find the first booked date that comes after the start date
@@ -215,6 +223,15 @@ document.addEventListener("DOMContentLoaded", function() {
                             firstBookedAfterStart = bookedDate;
                             firstBookedAfterStartStr = bookedDateStr;
                         }
+                    }
+                });
+
+                // Store all booked dates after start for validation
+                bookedDatesAfterStart = [];
+                bookedDates.forEach(function(bookedDateStr) {
+                    var bookedDate = new Date(bookedDateStr);
+                    if (bookedDate >= startObj) {
+                        bookedDatesAfterStart.push(bookedDateStr);
                     }
                 });
 
