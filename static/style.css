@@ -1262,6 +1262,17 @@ body {
     font-weight: 600;
 }
 
+.price-input.source-cell {
+    border: 3px solid var(--primary-color);
+    background: #fff8e1;
+    box-shadow: 0 0 0 2px rgba(246, 186, 0, 0.3);
+}
+
+.price-input.target-cell {
+    border: 2px solid var(--secondary-color);
+    background: #f1f8e9;
+}
+
 .duplicate-row-btn,
 .delete-row-btn {
     padding: 5px 8px;
@@ -1295,6 +1306,7 @@ body {
 
 .price-editor-legend {
     margin-top: 15px;
+    margin-bottom: 15px;
     padding: 12px 15px;
     background: #fff3e0;
     border-radius: 8px;
@@ -1309,6 +1321,20 @@ body {
     border-radius: 4px;
     font-weight: 600;
     color: #c2185b;
+}
+
+.price-editor-help {
+    background: #e3f2fd;
+    border-left-color: #2196f3;
+}
+
+.price-editor-help strong {
+    color: #1565c0;
+}
+
+.price-editor-help code {
+    background: #e8eaf6;
+    color: #1a237e;
 }
 
 /* Responsive Price Editor */

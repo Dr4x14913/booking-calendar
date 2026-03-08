@@ -58,6 +58,15 @@
               <p class="settings-description">Set prices for each date. Use the table below to edit prices for each duration (1-7 nights + additional night).</p>
               <p class="settings-description"><b>One month at a time !</b></p>
 
+              <!-- Legend and help -->
+              <div class="price-editor-legend">
+                <strong>Legend:</strong> Enter <code>-1</code> to disable a duration option for a given date.
+              </div>
+              
+              <div class="price-editor-legend price-editor-help">
+                <strong>💡 Shift+Click Fill:</strong> Click a cell to select it (orange border), then hold <code>Shift</code> and click another cell to fill the range with the same value. Works vertically (same column) and horizontally (same row).
+              </div>
+
               <!-- Price editor controls -->
               <div class="price-editor-controls">
                 <div class="price-editor-navigation">
@@ -101,10 +110,6 @@
               <input type="hidden" id="selected_month" name="selected_month">
               <input type="hidden" id="selected_year" name="selected_year">
               <textarea id="prices" name="prices" style="display:none;"></textarea>
-
-              <div class="price-editor-legend">
-                <strong>Legend:</strong> Enter <code>-1</code> to disable a duration option for a given date.
-              </div>
             </div>
             <input type="submit" name="save_prices" value="Save Prices" class="calendar-button">
           </form>
@@ -360,6 +365,9 @@
           attachPriceTableListeners();
         }
 
+        // Source cell for shift+click fill
+        let priceSourceCell = null;
+
         // Attach event listeners to price table using event delegation
         function attachPriceTableListeners() {
           const tbody = document.getElementById('price-editor-body');
@@ -379,6 +387,76 @@
               const row = e.target.closest('tr');
               row.remove();
             }
+          });
+
+          // Handle price input clicks for shift+click fill
+          document.querySelectorAll('.price-input').forEach(input => {
+            input.addEventListener('click', function(e) {
+              if (e.shiftKey && priceSourceCell) {
+                // Shift+click: fill from source to this cell
+                const sourceCol = priceSourceCell.dataset.col;
+                const targetCol = this.dataset.col;
+                const value = priceSourceCell.value;
+                let filled = false;
+                
+                // Vertical fill: same column, different rows
+                if (sourceCol === targetCol) {
+                  const sourceRow = priceSourceCell.closest('tr');
+                  const targetRow = this.closest('tr');
+                  
+                  // Get all rows between source and target
+                  const allRows = Array.from(document.querySelectorAll('#price-editor-body tr'));
+                  const sourceIndex = allRows.indexOf(sourceRow);
+                  const targetIndex = allRows.indexOf(targetRow);
+                  
+                  // Fill all cells in range
+                  for (let i = Math.min(sourceIndex, targetIndex); i <= Math.max(sourceIndex, targetIndex); i++) {
+                    const cell = allRows[i].querySelector(`.price-input[data-col="${sourceCol}"]`);
+                    if (cell) {
+                      cell.value = value;
+                      cell.classList.add('target-cell');
+                      setTimeout(() => cell.classList.remove('target-cell'), 500);
+                      filled = true;
+                    }
+                  }
+                }
+                
+                // Horizontal fill: same row, different columns
+                if (!filled) {
+                  const sourceRow = priceSourceCell.closest('tr');
+                  const targetRow = this.closest('tr');
+                  
+                  if (sourceRow === targetRow) {
+                    const sourceInput = sourceRow.querySelector(`.price-input[data-col="${sourceCol}"]`);
+                    const targetInput = targetRow.querySelector(`.price-input[data-col="${targetCol}"]`);
+                    
+                    if (sourceInput && targetInput) {
+                      const allInputs = Array.from(sourceRow.querySelectorAll('.price-input'));
+                      const sourceIdx = allInputs.indexOf(sourceInput);
+                      const targetIdx = allInputs.indexOf(targetInput);
+                      
+                      // Fill all cells in range
+                      for (let i = Math.min(sourceIdx, targetIdx); i <= Math.max(sourceIdx, targetIdx); i++) {
+                        const cell = allInputs[i];
+                        if (cell) {
+                          cell.value = value;
+                          cell.classList.add('target-cell');
+                          setTimeout(() => cell.classList.remove('target-cell'), 500);
+                          filled = true;
+                        }
+                      }
+                    }
+                  }
+                }
+              } else {
+                // Regular click: set as source
+                if (priceSourceCell) {
+                  priceSourceCell.classList.remove('source-cell');
+                }
+                priceSourceCell = this;
+                priceSourceCell.classList.add('source-cell');
+              }
+            });
           });
 
           // Update data on input change (no need to update in memory, happens on submit)
