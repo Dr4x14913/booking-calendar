@@ -360,24 +360,25 @@
           attachPriceTableListeners();
         }
 
-        // Attach event listeners to price table
+        // Attach event listeners to price table using event delegation
         function attachPriceTableListeners() {
-          // Duplicate row
-          document.querySelectorAll('.duplicate-row-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-              const row = this.closest('tr');
+          const tbody = document.getElementById('price-editor-body');
+          
+          // Use event delegation for duplicate and delete buttons
+          tbody.addEventListener('click', function(e) {
+            if (e.target.classList.contains('duplicate-row-btn')) {
+              const row = e.target.closest('tr');
               const newRow = row.cloneNode(true);
+              // Make the date input editable in the new row
+              const dateInput = newRow.querySelector('.price-date-input');
+              if (dateInput) {
+                dateInput.removeAttribute('readonly');
+              }
               row.after(newRow);
-              attachPriceTableListeners();
-            });
-          });
-
-          // Delete row
-          document.querySelectorAll('.delete-row-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-              const row = this.closest('tr');
+            } else if (e.target.classList.contains('delete-row-btn')) {
+              const row = e.target.closest('tr');
               row.remove();
-            });
+            }
           });
 
           // Update data on input change (no need to update in memory, happens on submit)
