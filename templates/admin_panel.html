@@ -343,6 +343,11 @@
             const tr = document.createElement('tr');
             tr.dataset.date = row.date;
             
+            const dayOfWeek = parseDate(row.date).getDay(); // 0 = Sunday, 6 = Saturday
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+              tr.classList.add('weekend-row');
+            }
+            
             tr.innerHTML = `
               <td><input type="text" class="price-date-input" value="${row.date}" readonly></td>
               <td><input type="number" class="price-input" data-col="1" value="${row['1']}" min="-1"></td>

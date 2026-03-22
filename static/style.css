@@ -1337,6 +1337,15 @@ body {
     color: #1a237e;
 }
 
+
+.weekend-row {
+    background-color: var(--accent-color) !important;
+}
+
+.weekend-row:hover {
+    background-color:  var(--accent-color) !important;
+}
+
 /* Responsive Price Editor */
 @media (max-width: 768px) {
     .price-editor-controls {
