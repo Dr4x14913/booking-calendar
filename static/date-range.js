@@ -38,6 +38,13 @@ document.addEventListener("DOMContentLoaded", function() {
             if (bookedDay) {
                 return;
             }
+            // Don't allow selecting a date after the first booked date (explicit validation)
+            if (bookedDatesAfterStart.length > 0) {
+                var isFirstBookedAfter = bookedDatesAfterStart.some(function(d) { return d > dateStr; });
+                if (isFirstBookedAfter) {
+                    return;
+                }
+            }
             endDate = dateStr;
             dateElement.classList.add('end-date');
             updateRangeSelection();
@@ -91,8 +98,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 } else if (dateObj >= startObj && day.classList.contains('disabled')) {
                     // Re-enable dates that are on or after start date
                     // But keep forbidden end dates disabled
+                    // And keep dates after firstBookedAfterStart disabled
                     if (!forbiddenEndDates.includes(dateStr)) {
-                        day.classList.remove('disabled');
+                        var isAfterFirstBooked = bookedDatesAfterStart.some(function(d) { return d > dateStr; });
+                        if (!isAfterFirstBooked) {
+                            day.classList.remove('disabled');
+                        }
                     }
                 }
             }
@@ -248,12 +259,9 @@ document.addEventListener("DOMContentLoaded", function() {
                             }
                         }
                     });
-                    console.log(firstBookedAfterStart);
                     const firstBookedAfterStartElement = document.querySelector('[date="' + firstBookedAfterStartStr + '"]');
-                    console.log(firstBookedAfterStartElement);
                     firstBookedAfterStartElement.classList.remove('disabled', "booked");
                     firstBookedAfterStartElement.classList.add('available', 'temp-available');
-                    console.log(firstBookedAfterStartElement);
                 }
             })
             .catch(error => {

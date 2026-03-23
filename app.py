@@ -125,15 +125,15 @@ def update_prices():
     prices_data = request.form.get("prices")
     selected_month = request.form.get("selected_month")
     selected_year = request.form.get("selected_year")
-    
+
     if prices_data:
       # Read existing prices
       existing_df = get_prices()
-      
+
       # Parse new prices from form
       cols = ['date', '1 nigth', '2 nigth', '3 nigth', '4 nigth', '5 nigth', '6 nigth', '7 nigth', 'additional nigth']
       new_df = pd.read_csv(StringIO(prices_data), sep=r'\s+', names=cols, header=None)
-      
+
       # Always merge new data with existing data
       if selected_month and selected_year:
         merged_df = merge_price_data(existing_df, new_df, int(selected_month), int(selected_year))
@@ -404,21 +404,21 @@ def submit_reservation():
 def get_price(start_date, end_date):
     duration = (datetime.strptime(end_date, C_STANDARD_DATE_FMT) - datetime.strptime(start_date, C_STANDARD_DATE_FMT)).days
     prices = get_prices()
-    
+
     def get_price_for_duration(start_d, dur):
       """Get price for a given start date and duration"""
       try:
         return int(prices.loc[prices["date"] == start_d][f"{dur} nigth"].iloc[0])
       except (IndexError, KeyError):
         return None
-    
+
     def get_additional_nigth_price(start_d):
       """Get unitary price for additional night"""
       try:
         return int(prices.loc[prices["date"] == start_d]["additional nigth"].iloc[0])
       except (IndexError, KeyError):
         return None
-    
+
     def calculate_total_price(start_d, dur):
       """Calculate total price for duration, handling > 7 nights"""
       if dur <= 7:
@@ -427,14 +427,14 @@ def get_price(start_date, end_date):
         if price is None or price == -1:
           return None
         return price
-      
+
       # For > 7 nights, calculate using 7-night blocks + remainder
       num_7night_blocks = dur // 7
       remaining_days = dur % 7
-      
+
       total = 0
       current_date = datetime.strptime(start_d, C_STANDARD_DATE_FMT)
-      
+
       # Process 7-night blocks
       for i in range(num_7night_blocks):
         block_start = current_date + timedelta(days=i * 7)
@@ -448,7 +448,7 @@ def get_price(start_date, end_date):
           total += 7 * unit_price
         else:
           total += price
-      
+
       # Process remaining days
       if remaining_days > 0:
         remainder_start = current_date + timedelta(days=num_7night_blocks * 7)
@@ -462,12 +462,12 @@ def get_price(start_date, end_date):
           total += remaining_days * unit_price
         else:
           total += price
-      
+
       return total
-    
+
     total_price = calculate_total_price(start_date, duration)
     return total_price
-    
+
 def get_allowed_start_dates():
   prices_dates = [datetime.strptime(i, C_STANDARD_DATE_FMT) for i in list(get_prices()['date'])]
   booked_dates = [datetime.strptime(i, C_STANDARD_DATE_FMT) for i in get_booked_dates()]
@@ -524,7 +524,7 @@ def get_config():
             "icon_url": ""
         }
         set_config(default_config)
-    
+
     with open(json_file, "r") as f:
         return json.load(f)
 
@@ -564,26 +564,26 @@ def merge_price_data(existing_df, new_df, month, year):
     """Merge new price data for specific month/year into existing data"""
     if existing_df.empty:
         return new_df
-    
+
     # Convert date column to datetime for comparison
     existing_df['date_parsed'] = pd.to_datetime(existing_df['date'], format=C_STANDARD_DATE_FMT, errors='coerce')
     new_df['date_parsed'] = pd.to_datetime(new_df['date'], format=C_STANDARD_DATE_FMT, errors='coerce')
-    
+
     # Filter out existing rows for the target month/year
     mask = ~((existing_df['date_parsed'].dt.month == month) & (existing_df['date_parsed'].dt.year == year))
     existing_filtered = existing_df[mask]
-    
+
     # Drop the temporary parsed column
     existing_filtered = existing_filtered.drop('date_parsed', axis=1)
     new_df = new_df.drop('date_parsed', axis=1)
-    
+
     # Combine existing and new data
     merged_df = pd.concat([existing_filtered, new_df], ignore_index=True)
-    
+
     # Sort by date
     merged_df['date_parsed'] = pd.to_datetime(merged_df['date'], format=C_STANDARD_DATE_FMT, errors='coerce')
     merged_df = merged_df.sort_values('date_parsed').drop('date_parsed', axis=1)
-    
+
     return merged_df
 
 #---------------------------------------------------------------------------------
